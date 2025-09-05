@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SST Learning Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --primary-color: #4f46e5;
+            --primary-light: #6366f1;
+            --primary-dark: #4338ca;
+            --secondary-color: #10b981;
+            --warning-color: #f59e0b;
+            
+            /* Light Theme */
+            --background-start: #e0e7ff;
+            --background-end: #f3f4f6;
+            --card-background: rgba(255, 255, 255, 0.6);
+            --card-background-opaque: #ffffff;
+            --text-color: #111827;
+            --muted-text-color: #4b5563;
+            --border-color: rgba(209, 213, 219, 0.7);
+            --header-bg: rgba(249, 250, 251, 0.7);
+            --nav-bg: rgba(249, 250, 251, 0.7);
+            --nav-hover-bg: rgba(243, 244, 246, 0.8);
+            --nav-active-bg: rgba(238, 242, 255, 0.9);
+            --error-color: #ef4444;
+            --success-color: #22c55e;
+        }
+
+        .dark {
+            --background-start: #111827;
+            --background-end: #1f2937;
+            --card-background: rgba(31, 41, 55, 0.5);
+            --card-background-opaque: #1f2937;
+            --text-color: #f9fafb;
+            --muted-text-color: #9ca3af;
+            --border-color: rgba(75, 85, 99, 0.7);
+            --header-bg: rgba(17, 24, 39, 0.7);
+            --nav-bg: rgba(17, 24, 39, 0.7);
+            --nav-hover-bg: rgba(31, 41, 55, 0.8);
+            --nav-active-bg: rgba(55, 65, 81, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--background-start), var(--background-end));
+            background-size: 200% 200%;
+            animation: gradient-animation 15s ease infinite;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        @keyframes gradient-animation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Page transitions */
+        .page {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Auth Forms --- */
+        .auth-card {
+            background-color: var(--card-background-opaque);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            max-width: 450px;
+            width: 100%;
+            margin: 2rem auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .auth-card h1 {
+            text-align: center;
+            font-size: 1.875rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .auth-card p {
+            text-align: center;
+            color: var(--muted-text-color);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: var(--card-background-opaque);
+            color: var(--text-color);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.875rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-image: linear-gradient(to right, var(--primary-light), var(--primary-color));
+            color: white;
+            box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn-primary:hover {
+            background-image: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+            box-shadow: 0 7px 15px rgba(79, 70, 229, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .switch-form {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--muted-text-color);
+        }
+
+        .switch-form a {
+            color: var(--primary-color);
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .switch-form a:hover {
+            text-decoration: underline;
+        }
+        
+        /* --- Feedback Message --- */
+        #feedback-message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transition: transform 0.4s ease-in-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        #feedback-message.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        #feedback-message.success { background-color: var(--success-color); }
+        #feedback-message.error { background-color: var(--error-color); }
+        #feedback-message.info { background-color: #374151; }
+
+        /* --- Dashboard --- */
+        .dashboard {
+            background-color: var(--card-background);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--header-bg);
+        }
+        
+        .dashboard-header h1 { font-size: 1.5rem; }
+        .dashboard-header span { font-weight: 400; color: var(--muted-text-color); }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        #theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted-text-color);
+            transition: all 0.2s;
+        }
+        #theme-toggle:hover {
+            background-color: var(--nav-hover-bg);
+            color: var(--text-color);
+        }
+        #theme-toggle svg { width: 20px; height: 20px; }
+        .dark #moon-icon { display: none; }
+        .dark #sun-icon { display: block; }
+        #sun-icon { display: none; }
+
+        .btn-logout {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-logout:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .dashboard-body {
+            display: flex;
+        }
+
+        .dashboard-nav {
+            width: 240px;
+            background-color: var(--nav-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 1.5rem 0;
+            flex-shrink: 0;
+        }
+
+        .dashboard-nav .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            text-align: left;
+            padding: 1rem 2rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--muted-text-color);
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .nav-btn .icon { width: 20px; height: 20px; stroke-width: 2; }
+        .dashboard-nav .nav-btn:hover { background-color: var(--nav-hover-bg); color: var(--text-color); }
+        .dashboard-nav .nav-btn.active {
+            color: var(--primary-color);
+            font-weight: 600;
+            border-left-color: var(--primary-color);
+            background-color: var(--nav-active-bg);
+        }
+
+        .dashboard-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+        }
+
+        .section-header { margin-bottom: 1.5rem; }
+        .section-header h2 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+        .section-header p { color: var(--muted-text-color); }
+        
+        /* --- Topic List & Tables --- */
+        .subject-section { margin-bottom: 2.5rem; }
+        .subject-section h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .topic-list, .leaderboard-list, .student-list { list-style: none; }
+        .topic-item, .leaderboard-item, .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: transparent;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+        .topic-item:hover, .leaderboard-item:hover, .student-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            background-color: var(--nav-hover-bg);
+            border-color: var(--border-color);
+        }
+        
+        .topic-name { font-weight: 600; }
+        .topic-status { font-size: 0.875rem; font-weight: 500; padding: 0.25rem 0.75rem; border-radius: 999px; }
+        .topic-status.active { color: #15803d; background-color: #dcfce7; }
+        .topic-status.inactive { color: #991b1b; background-color: #fee2e2; }
+        
+        .btn-quiz, .btn-discuss {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            margin-left: 0.5rem;
+        }
+        .btn-quiz:hover, .btn-discuss:hover { background-color: var(--primary-dark); }
+
+        .leaderboard-rank { font-weight: 700; min-width: 30px; }
+        .leaderboard-name { flex-grow: 1; font-weight: 500; }
+        .leaderboard-score, .student-score { font-weight: 700; color: var(--primary-color); }
+        
+        /* --- Quiz Modal --- */
+        .quiz-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            animation: fadeIn 0.3s;
+        }
+
+        .quiz-container {
+            background-color: var(--card-background-opaque);
+            width: 90%;
+            max-width: 800px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+            border: 1px solid var(--border-color);
+            animation: scaleIn 0.3s ease-out;
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .quiz-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .quiz-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .quiz-header h2 { font-size: 1.25rem; }
+        #quiz-timer, #quiz-progress-text { font-weight: 600; color: var(--primary-color); }
+        #quiz-progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #quiz-progress-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .quiz-body { padding: 2rem; overflow-y: auto; }
+        #question-text { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+        .option-btn {
+            display: block; width: 100%; text-align: left; padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px; background-color: transparent; font-size: 1rem;
+            cursor: pointer; transition: all 0.2s; color: var(--text-color);
+        }
+        .option-btn:hover { border-color: var(--primary-color); background-color: var(--nav-hover-bg); }
+        .option-btn.correct { background-color: #dcfce7; border-color: #22c55e; color: #15803d; font-weight: 600;}
+        .dark .option-btn.correct { background-color: #166534; color: #dcfce7; }
+        .option-btn.incorrect { background-color: #fee2e2; border-color: #ef4444; color: #991b1b; }
+        .dark .option-btn.incorrect { background-color: #991b1b; color: #fee2e2; }
+        .option-btn.disabled { cursor: not-allowed; opacity: 0.7; }
+
+        .quiz-footer {
+            padding: 1.5rem; border-top: 1px solid var(--border-color);
+            display: flex; justify-content: space-between;
+        }
+        
+        #quiz-result { text-align: center; padding: 3rem 2rem; }
+        #quiz-result h2 { font-size: 2rem; margin-bottom: 1rem; }
+        #quiz-result p { font-size: 1.125rem; margin-bottom: 2rem; color: var(--muted-text-color); }
+
+        /* --- Teacher Toggles --- */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { display: none; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--muted-text-color); transition: .4s; border-radius: 28px;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px;
+            left: 4px; bottom: 4px; background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--secondary-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* --- Loader --- */
+        .loader {
+            border: 5px solid var(--border-color);
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%; width: 50px; height: 50px;
+            animation: spin 1s linear infinite; margin: 2rem auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .skeleton-loader { display: flex; flex-direction: column; gap: 1rem; }
+        .skeleton { background-color: var(--border-color); border-radius: 8px; animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 50% { opacity: .5; } }
+        .skeleton-header { width: 40%; height: 32px; margin-bottom: 1rem; }
+        .skeleton-item { width: 100%; height: 60px; }
+        
+        /* --- Analytics Dashboard --- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card {
+            background-color: var(--nav-bg); padding: 1.5rem;
+            border-radius: 8px; border: 1px solid var(--border-color);
+        }
+        .stat-card h4 { font-size: 0.875rem; color: var(--muted-text-color); text-transform: uppercase; margin-bottom: 0.5rem; }
+        .stat-card .value { font-size: 2.25rem; font-weight: 700; color: var(--primary-color); }
+        
+        .chart-container {
+            margin-bottom: 2rem; background-color: var(--nav-bg); padding: 1.5rem;
+            border-radius: 8px; border: 1px solid var(--border-color); height: 350px;
+        }
+        
+        .topic-analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .topic-analysis-list h4 { font-size: 1.125rem; margin-bottom: 1rem; }
+        .topic-analysis-list ul { list-style: none; }
+        .topic-analysis-list li {
+            background-color: var(--nav-bg); padding: 0.75rem 1rem;
+            border-radius: 6px; margin-bottom: 0.5rem; font-weight: 500;
+        }
+        .strong-topics h4 { color: #16a34a; } .weak-topics h4 { color: #dc2626; }
+
+        /* --- Achievements/Badges --- */
+        .badges-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; }
+        .badge-card {
+            background-color: var(--nav-bg); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 1.5rem 1rem; text-align: center;
+            opacity: 0.5; filter: grayscale(80%); transition: all 0.3s;
+        }
+        .badge-card.unlocked {
+            opacity: 1; filter: grayscale(0%); border-color: var(--warning-color);
+            background-color: #fffbeb; transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2);
+        }
+        .dark .badge-card.unlocked { background-color: #422006; }
+        .badge-icon { font-size: 3rem; line-height: 1; margin-bottom: 0.75rem; color: var(--warning-color); }
+        .badge-card h4 { font-size: 1rem; margin-bottom: 0.25rem; font-weight: 600; }
+        .badge-card p { font-size: 0.875rem; color: var(--muted-text-color); }
+        
+        #badge-notification {
+            position: fixed; bottom: 30px; left: 50%;
+            transform: translateX(-50%) translateY(200%);
+            background-color: #111827; color: white;
+            padding: 1rem 1.5rem; border-radius: 12px;
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            text-align: center; z-index: 1001;
+            transition: transform 0.5s ease-in-out;
+        }
+        #badge-notification.show { transform: translateX(-50%) translateY(0); }
+        #badge-notification .badge-icon { font-size: 2rem; }
+        #badge-notification h3 { margin: 0.5rem 0; }
+
+        /* Discussion Boards */
+        .thread-item {
+            background-color: transparent; padding: 1.25rem;
+            border: 1px solid var(--border-color); border-radius: 8px;
+            margin-bottom: 1rem; cursor: pointer; transition: all 0.2s;
+        }
+        .thread-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            background-color: var(--nav-hover-bg);
+        }
+        .thread-title { font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem; }
+        .thread-meta { font-size: 0.875rem; color: var(--muted-text-color); }
+        
+        .new-thread-form { margin-top: 2rem; }
+        
+        #discussion-thread-view .post-list { margin-top: 2rem; list-style: none; }
+        .post-item { padding: 1rem; border-bottom: 1px solid var(--border-color); }
+        .post-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.5rem; color: var(--muted-text-color); font-size: 0.875rem;
+        }
+        .post-author { font-weight: 600; color: var(--text-color); }
+        .post-content { line-height: 1.6; }
+        .delete-btn {
+            background: none; border: none; color: var(--error-color); cursor: pointer; font-size: 0.875rem;
+            margin-left: 1rem;
+        }
+        
+        textarea.form-control {
+            width: 100%; padding: 0.75rem 1rem; border-radius: 8px;
+            border: 1px solid var(--border-color); font-size: 1rem;
+            font-family: 'Inter', sans-serif; min-height: 100px;
+            resize: vertical; color: var(--text-color); background-color: var(--card-background-opaque);
+        }
+        textarea.form-control:focus {
+             outline: none; border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+        }
+        .btn-secondary {
+            background-color: var(--border-color); color: var(--text-color);
+            box-shadow: 0 4px 6px rgba(0,0,0, 0.05);
+        }
+        .btn-secondary:hover { background-color: var(--muted-text-color); }
+
+        @media (max-width: 768px) {
+            .dashboard-body { flex-direction: column; }
+            .dashboard-nav {
+                width: 100%; border-right: none; border-bottom: 1px solid var(--border-color);
+                display: flex; padding: 0; overflow-x: auto;
+            }
+            .dashboard-nav .nav-btn {
+                flex: 1 0 auto; justify-content: center; padding: 1rem;
+                border-left: none; border-bottom: 3px solid transparent;
+            }
+             .dashboard-nav .nav-btn.active {
+                border-left: none; border-bottom-color: var(--primary-color);
+                background-color: transparent;
+            }
+            .topic-analysis-grid { grid-template-columns: 1fr; }
+            .dashboard-header h1 { font-size: 1.25rem; }
+            .auth-card { padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Page -->
+        <div id="login-page" class="page">
+            <div class="auth-card">
+                <h1>Welcome Back!</h1>
+                <p>Log in to continue your learning journey.</p>
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Log In</button>
+                </form>
+                <p class="switch-form">Don't have an account? <a id="show-signup">Sign Up</a></p>
+            </div>
+        </div>
+
+        <!-- Signup Page -->
+        <div id="signup-page" class="page hidden">
+            <div class="auth-card">
+                <h1>Create Account</h1>
+                <p>Start your social science adventure today!</p>
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="signup-username">Username</label>
+                        <input type="text" id="signup-username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <input type="password" id="signup-password" required minlength="6">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Sign Up</button>
+                </form>
+                <p class="switch-form">Already have an account? <a id="show-login">Log In</a></p>
+            </div>
+        </div>
+
+        <!-- Student Dashboard -->
+        <div id="student-dashboard-page" class="page hidden">
+            <div class="dashboard">
+                <header class="dashboard-header">
+                    <h1>Student Dashboard <span id="student-username"></span></h1>
+                    <div class="header-controls">
+                        <button id="theme-toggle" title="Toggle Theme">
+                            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+                            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
+                        </button>
+                        <button class="btn-logout">Logout</button>
+                    </div>
+                </header>
+                <div class="dashboard-body">
+                    <nav class="dashboard-nav">
+                        <button class="nav-btn active" data-tab="student-topics">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-5.747-6.99H17.75" /></svg>
+                            Topics
+                        </button>
+                        <button class="nav-btn" data-tab="student-analysis">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            My Analysis
+                        </button>
+                        <button class="nav-btn" data-tab="student-leaderboard">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>
+                            Leaderboard
+                        </button>
+                        <button class="nav-btn" data-tab="student-badges">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Achievements
+                        </button>
+                    </nav>
+                    <main class="dashboard-content">
+                        <div id="student-topics" class="content-section"></div>
+                        <div id="student-analysis" class="content-section hidden"></div>
+                        <div id="student-leaderboard" class="content-section hidden"></div>
+                        <div id="student-badges" class="content-section hidden"></div>
+                    </main>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Dashboard -->
+        <div id="teacher-dashboard-page" class="page hidden">
+            <div class="dashboard">
+                <header class="dashboard-header">
+                    <h1>Teacher Dashboard <span id="teacher-username"></span></h1>
+                     <div class="header-controls">
+                        <button id="theme-toggle-teacher" title="Toggle Theme">
+                            <svg id="moon-icon-teacher" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+                            <svg id="sun-icon-teacher" style="display:none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
+                        </button>
+                        <button class="btn-logout">Logout</button>
+                    </div>
+                </header>
+                <div class="dashboard-body">
+                    <nav class="dashboard-nav">
+                        <button class="nav-btn active" data-tab="teacher-topics">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-5.747-6.99H17.75" /></svg>
+                            Manage Topics
+                        </button>
+                        <button class="nav-btn" data-tab="teacher-analysis">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            Platform Analytics
+                        </button>
+                        <button class="nav-btn" data-tab="teacher-students">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                            All Students
+                        </button>
+                        <button class="nav-btn" data-tab="teacher-leaderboard">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>
+                            Leaderboard
+                        </button>
+                    </nav>
+                    <main class="dashboard-content">
+                        <div id="teacher-topics" class="content-section"></div>
+                        <div id="teacher-analysis" class="content-section hidden"></div>
+                        <div id="teacher-students" class="content-section hidden"></div>
+                        <div id="teacher-leaderboard" class="content-section hidden"></div>
+                    </main>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Discussion Board View -->
+        <div id="discussion-board-page" class="page hidden">
+             <div class="dashboard">
+                <header class="dashboard-header">
+                    <h1 id="discussion-topic-title">Discussion</h1>
+                    <button class="btn btn-secondary" id="back-to-topics-btn">Back to Topics</button>
+                </header>
+                 <main class="dashboard-content">
+                     <div id="discussion-thread-list"></div>
+                     <div id="discussion-thread-view" class="hidden"></div>
+                </main>
+            </div>
+        </div>
+
+    </div>
+
+        <!-- Quiz Modal -->
+    <div id="quiz-modal" class="quiz-modal hidden">
+        <div class="quiz-container">
+            <div class="quiz-header">
+                <div class="quiz-header-top">
+                    <h2 id="quiz-topic-name">Quiz</h2>
+                    <div id="quiz-progress-text">Q: 1/30</div>
+                    <div id="quiz-timer">Time: 15:00</div>
+                </div>
+                <div id="quiz-progress-bar-container">
+                    <div id="quiz-progress-bar"></div>
+                </div>
+            </div>
+            <div id="quiz-body" class="quiz-body">
+                <p id="question-text">Question text will appear here.</p>
+                <div class="options-grid" id="options-container"></div>
+            </div>
+            <div id="quiz-footer" class="quiz-footer">
+                <button id="close-quiz-btn" class="btn btn-secondary">Close</button>
+                <button id="next-question-btn" class="btn btn-primary">Next</button>
+            </div>
+            <div id="quiz-result" class="hidden"></div>
+        </div>
+    </div>
+    
+    <!-- Badge Notification -->
+    <div id="badge-notification">
+        <div id="badge-notification-icon" class="badge-icon"></div>
+        <h3>New Badge Unlocked!</h3>
+        <p id="badge-notification-name"></p>
+    </div>
+
+    <div id="feedback-message"></div>
+    
+    <script>
+    // --- SUPABASE & APP CONFIG --- //
+    const SUPABASE_URL = 'https://cqxlqgiepqzogyrbpppo.supabase.co';
+    const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxeGxxZ2llcHF6b2d5cmJwcHBvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzA2MzI0OSwiZXhwIjoyMDcyNjM5MjQ5fQ.sfwCz1T3TH8uJWTWG8WqfRhc20VjVNbKrGJFqVShHu4';
+
+    if (SUPABASE_URL.includes('PASTE_YOUR') || SUPABASE_SERVICE_KEY.includes('PASTE_YOUR')) {
+        document.body.innerHTML = `<div style="padding: 20px; text-align: center; font-family: sans-serif; background-color: #ffebee; border: 2px solid #c62828;">
+            <h1>Configuration Needed!</h1>
+            <p>Please paste your Supabase URL and Service Role Key into the script tag in this HTML file to connect to your database.</p>
+        </div>`;
+        throw new Error("Supabase credentials not configured.");
+    }
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+    
+    const TEACHER_ACCOUNTS = { 'akshajanand': 'teacher@123', 'kuhusinha': 'teacher@123' };
+    let currentUser = null, quizState = {}, currentTimer = null, myChart = null;
+    let quizLoading = false; // Flag to prevent quiz race conditions
+
+    // --- UTILITY & PAGE NAVIGATION --- //
+    function showFeedback(message, type = 'info', duration = 3000) {
+        const feedbackEl = document.getElementById('feedback-message');
+        feedbackEl.textContent = message;
+        feedbackEl.className = type;
+        feedbackEl.classList.add('show');
+        setTimeout(() => { feedbackEl.classList.remove('show'); }, duration);
+    }
+
+    function showLoader(container, type = 'spinner') {
+        if (type === 'list') {
+            container.innerHTML = `<div class="skeleton-loader"><div class="skeleton skeleton-header"></div><div class="skeleton skeleton-item"></div><div class="skeleton skeleton-item"></div><div class="skeleton skeleton-item"></div></div>`;
+        } else {
+             container.innerHTML = '<div class="loader"></div>';
+        }
+    }
+
+    function showPage(pageId) {
+        document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+        document.getElementById(pageId).classList.remove('hidden');
+    }
+
+    function showStudentDashboard() {
+        document.getElementById('student-username').textContent = `(${currentUser.username})`;
+        showPage('student-dashboard-page');
+        loadStudentTopics();
+        switchDashboardTab(document.querySelector('#student-dashboard-page .nav-btn[data-tab="student-topics"]'), '#student-dashboard-page');
+    }
+
+    function showTeacherDashboard() {
+        document.getElementById('teacher-username').textContent = `(${currentUser.username})`;
+        showPage('teacher-dashboard-page');
+        loadTeacherTopics();
+        switchDashboardTab(document.querySelector('#teacher-dashboard-page .nav-btn[data-tab="teacher-topics"]'), '#teacher-dashboard-page');
+    }
+
+    // --- AUTHENTICATION --- //
+    async function handleLogin(e) {
+        e.preventDefault();
+        showFeedback('Logging in...', 'info', 2000);
+        const username = document.getElementById('login-username').value;
+        const password = document.getElementById('login-password').value;
+
+        if (TEACHER_ACCOUNTS[username] && TEACHER_ACCOUNTS[username] === password) {
+            currentUser = { username, role: 'teacher' };
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showTeacherDashboard();
+            return;
+        }
+
+        const { data, error } = await supabaseClient.from('users').select('*').eq('username', username).eq('password', password).single();
+        if (error || !data) {
+            showFeedback('Invalid username or password.', 'error');
+        } else {
+            currentUser = { id: data.id, username: data.username, role: 'student' };
+            sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showStudentDashboard();
+        }
+    }
+
+    async function handleLogout() {
+        currentUser = null;
+        sessionStorage.removeItem('currentUser');
+        showPage('login-page');
+    }
+
+    async function handleSignup(e) {
+        e.preventDefault();
+        const username = document.getElementById('signup-username').value;
+        const email = document.getElementById('signup-email').value;
+        const password = document.getElementById('signup-password').value;
+
+        const { data: userData, error: userError } = await supabaseClient.from('users').insert([{ username, email, password }]).select().single();
+        if (userError) {
+            if (userError.code === '23505') { showFeedback('Username or email already exists.', 'error'); } 
+            else { showFeedback('Could not create account.', 'error'); }
+            return;
+        }
+
+        const { error: performanceError } = await supabaseClient.from('student_performance').insert([{ user_id: userData.id, total_score: 0 }]);
+        if (performanceError) { showFeedback('Account created, but could not initialize performance record.', 'error'); } 
+        else { showFeedback('Account created successfully! Please log in.', 'success'); }
+        
+        showPage('login-page');
+        document.getElementById('signup-form').reset();
+    }
+    
+    // --- DASHBOARD & DATA --- //
+    function switchDashboardTab(activeButton, pageSelector) {
+        const page = document.querySelector(pageSelector);
+        page.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+        activeButton.classList.add('active');
+        page.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
+        const tabId = activeButton.dataset.tab;
+        page.querySelector(`#${tabId}`).classList.remove('hidden');
+        switch(tabId) {
+            case 'student-topics': loadStudentTopics(); break;
+            case 'student-analysis': loadStudentAnalysis(); break;
+            case 'student-leaderboard': loadLeaderboard('#student-leaderboard'); break;
+            case 'student-badges': loadStudentBadges(); break;
+            case 'teacher-topics': loadTeacherTopics(); break;
+            case 'teacher-analysis': loadPlatformAnalysis(); break;
+            case 'teacher-students': loadAllStudents(); break;
+            case 'teacher-leaderboard': loadLeaderboard('#teacher-leaderboard'); break;
+        }
+    }
+    
+    async function getTopics() {
+        const { data, error } = await supabaseClient.from('topics').select('*');
+        if (error) { showFeedback('Could not fetch topics.', 'error'); return {}; }
+        return data.reduce((acc, topic) => {
+            if (!acc[topic.subject]) acc[topic.subject] = [];
+            acc[topic.subject].push(topic);
+            return acc;
+        }, {});
+    }
+
+    async function loadStudentTopics() {
+        const container = document.getElementById('student-topics');
+        showLoader(container, 'list');
+        const topicsBySubject = await getTopics();
+        let html = `<div class="section-header"><h2>Topics</h2><p>Choose a topic to start a quiz or join a discussion.</p></div>`;
+        for (const subject in topicsBySubject) {
+            html += `<div class="subject-section"><h3>${subject}</h3><ul class="topic-list">`;
+            topicsBySubject[subject].forEach(topic => {
+                if(topic.active_status) {
+                    html += `<li class="topic-item"><span class="topic-name">${topic.name}</span><div><button class="btn-quiz" data-topic-id="${topic.id}" data-topic-name="${topic.name}">Start Quiz</button><button class="btn-discuss" data-topic-id="${topic.id}" data-topic-name="${topic.name}">Discuss</button></div></li>`;
+                }
+            });
+            html += `</ul></div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    async function loadTeacherTopics() {
+        const container = document.getElementById('teacher-topics');
+        showLoader(container, 'list');
+        const topicsBySubject = await getTopics();
+        let html = `<div class="section-header"><h2>Manage Topics</h2><p>Activate or deactivate topics for students.</p></div>`;
+        for (const subject in topicsBySubject) {
+            html += `<div class="subject-section"><h3>${subject}</h3><ul class="topic-list">`;
+            topicsBySubject[subject].forEach(topic => {
+                html += `<li class="topic-item"><span class="topic-name">${topic.name}</span><label class="switch"><input type="checkbox" class="topic-toggle" data-topic-id="${topic.id}" ${topic.active_status ? 'checked' : ''}><span class="slider"></span></label></li>`;
+            });
+            html += `</ul></div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    async function loadLeaderboard(containerSelector) {
+        const container = document.querySelector(containerSelector);
+        showLoader(container, 'list');
+        const { data, error } = await supabaseClient.from('student_performance').select('total_score, users(username)').order('total_score', { ascending: false }).limit(10);
+        if (error) { container.innerHTML = `<p>Could not load leaderboard.</p>`; return; }
+        let html = `<div class="section-header"><h2>Top Students</h2><p>See who's leading the charts!</p></div><ul class="leaderboard-list">`;
+        data.forEach((entry, index) => {
+            html += `<li class="leaderboard-item"><span class="leaderboard-rank">#${index + 1}</span><span class="leaderboard-name">${entry.users.username}</span><span class="leaderboard-score">${entry.total_score} pts</span></li>`;
+        });
+        html += `</ul>`;
+        container.innerHTML = html;
+    }
+
+    async function loadAllStudents() {
+        const container = document.getElementById('teacher-students');
+        showLoader(container, 'list');
+        const { data, error } = await supabaseClient.from('student_performance').select('total_score, users(username)');
+        if (error) { container.innerHTML = `<p>Could not load student list.</p>`; return; }
+        let html = `<div class="section-header"><h2>All Students</h2><p>An overview of every student's performance.</p></div><ul class="student-list">`;
+        data.forEach(entry => {
+            html += `<li class="student-item"><span class="student-name">${entry.users.username}</span><span class="student-score">${entry.total_score} pts</span></li>`;
+        });
+        html += `</ul>`;
+        container.innerHTML = html;
+    }
+
+    // --- QUIZ LOGIC --- //
+    async function startQuiz(topicId, topicName) {
+        // Prevent starting a new quiz while another is loading to avoid race conditions.
+        if (quizLoading) return;
+        quizLoading = true;
+
+        // Set a loading state without destroying the elements
+        document.getElementById('question-text').textContent = 'Loading questions...';
+        document.getElementById('options-container').innerHTML = '<div class="loader"></div>';
+        
+        document.getElementById('quiz-topic-name').textContent = topicName;
+        document.getElementById('quiz-modal').classList.remove('hidden');
+        document.getElementById('quiz-result').classList.add('hidden');
+        document.getElementById('quiz-body').classList.remove('hidden');
+        document.getElementById('quiz-footer').style.display = 'flex';
+        document.getElementById('quiz-progress-bar').style.width = '0%'; // Reset progress bar
+
+
+        const { data, error } = await supabaseClient.from('questions').select('*').eq('topic_id', topicId);
+        if (error || data.length === 0) {
+            showFeedback('Could not load questions for this topic.', 'error');
+            document.getElementById('quiz-modal').classList.add('hidden'); 
+            quizLoading = false; // Reset flag on error
+            return;
+        }
+        
+        const shuffledQuestions = data.sort(() => 0.5 - Math.random());
+        quizState = { questions: shuffledQuestions.slice(0, 30), currentQuestionIndex: 0, score: 0, attempts: [] };
+        renderQuestion();
+        startTimer(15 * 60);
+        quizLoading = false; // Reset flag on success
+    }
+    
+    function renderQuestion() {
+        if (!quizState.questions || quizState.currentQuestionIndex >= quizState.questions.length) { 
+            endQuiz(); 
+            return; 
+        }
+        
+        const shuffledQuestions = data.sort(() => 0.5 - Math.random());
+        quizState = { questions: shuffledQuestions.slice(0, 30), currentQuestionIndex: 0, score: 0, attempts: [] };
+        renderQuestion();
+        startTimer(15 * 60);
+    }
+    
+    function renderQuestion() {
+        if (quizState.currentQuestionIndex >= quizState.questions.length) { endQuiz(); return; }
+        const question = quizState.questions[quizState.currentQuestionIndex];
+        const progress = ((quizState.currentQuestionIndex) / quizState.questions.length) * 100;
+        document.getElementById('quiz-progress-bar').style.width = `${progress}%`;
+        document.getElementById('question-text').textContent = question.question_text || question.question; // The fix is here
+        document.getElementById('quiz-progress-text').textContent = `Q: ${quizState.currentQuestionIndex + 1}/${quizState.questions.length}`;
+        document.getElementById('options-container').innerHTML = `<button class="option-btn" data-option="A">${question.option_a}</button><button class="option-btn" data-option="B">${question.option_b}</button><button class="option-btn" data-option="C">${question.option_c}</button><button class="option-btn" data-option="D">${question.option_d}</button>`;
+        document.getElementById('next-question-btn').classList.add('hidden');
+    }
+
+    function selectOption(selectedBtn) {
+        const selectedOption = selectedBtn.dataset.option;
+        const question = quizState.questions[quizState.currentQuestionIndex];
+        const isCorrect = selectedOption === question.correct_answer;
+        let score = 0;
+        if (isCorrect) { quizState.score++; score = 1; selectedBtn.classList.add('correct'); } 
+        else { selectedBtn.classList.add('incorrect'); document.querySelector(`.option-btn[data-option="${question.correct_answer}"]`)?.classList.add('correct'); }
+        quizState.attempts.push({ user_id: currentUser.id, question_id: question.id, selected_option: selectedOption, score: score });
+        document.querySelectorAll('.option-btn').forEach(btn => btn.classList.add('disabled'));
+        document.getElementById('next-question-btn').classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+        quizState.currentQuestionIndex++;
+        renderQuestion();
+    }
+
+    async function endQuiz() {
+        clearInterval(currentTimer);
+        document.getElementById('quiz-progress-bar').style.width = `100%`;
+        const { error: attemptsError } = await supabaseClient.from('attempts').insert(quizState.attempts);
+        if (attemptsError) { showFeedback('Error saving quiz results.', 'error'); }
+        const { error: scoreError } = await supabaseClient.rpc('increment_score', { user_id_in: currentUser.id, score_to_add: quizState.score });
+        if (scoreError) { showFeedback('Error updating total score.', 'error'); } 
+        else { await checkAndAwardBadges(); }
+        document.getElementById('quiz-body').classList.add('hidden');
+        document.getElementById('quiz-footer').style.display = 'none';
+        const resultContainer = document.getElementById('quiz-result');
+        resultContainer.classList.remove('hidden');
+        resultContainer.innerHTML = `<h2>Quiz Complete!</h2><p>You scored ${quizState.score} out of ${quizState.questions.length}</p><button id="finish-quiz-btn" class="btn btn-primary">Finish</button>`;
+    }
+
+    function startTimer(duration) {
+        let timer = duration;
+        const timerEl = document.getElementById('quiz-timer');
+        clearInterval(currentTimer);
+        currentTimer = setInterval(() => {
+            let minutes = parseInt(timer / 60, 10);
+            let seconds = parseInt(timer % 60, 10);
+            minutes = minutes < 10 ? "0" + minutes : minutes;
+            seconds = seconds < 10 ? "0" + seconds : seconds;
+            timerEl.textContent = `Time: ${minutes}:${seconds}`;
+            if (--timer < 0) { clearInterval(currentTimer); showFeedback('Time is up!', 'warning'); endQuiz(); }
+        }, 1000);
+    }
+    
+    // --- ANALYTICS DASHBOARD --- //
+    function animateValue(obj, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            let currentValue = Math.floor(progress * (end - start) + start);
+            obj.innerHTML = currentValue;
+            if (progress < 1) { window.requestAnimationFrame(step); }
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    async function loadStudentAnalysis() {
+        const container = document.getElementById('student-analysis');
+        showLoader(container);
+
+        const { data: attempts, error } = await supabaseClient.from('attempts').select('score, questions(topics(name, subject))').eq('user_id', currentUser.id);
+        if (error || !attempts) { container.innerHTML = `<p>Could not load your performance data.</p>`; return; }
+        if (attempts.length === 0) { container.innerHTML = `<div class="section-header"><h2>My Analysis</h2><p>Complete some quizzes to see your performance analysis here.</p></div>`; return; }
+
+        const totalQuestions = attempts.length;
+        const correctAnswers = attempts.filter(a => a.score === 1).length;
+        const incorrectAnswers = totalQuestions - correctAnswers;
+        const overallAccuracy = totalQuestions > 0 ? ((correctAnswers / totalQuestions) * 100) : 0;
+        
+        const subjectPerf = attempts.reduce((acc, attempt) => {
+            if (!attempt.questions || !attempt.questions.topics) return acc;
+            const subject = attempt.questions.topics.subject;
+            if (!acc[subject]) acc[subject] = { correct: 0, total: 0 };
+            acc[subject].total++;
+            if (attempt.score === 1) acc[subject].correct++;
+            return acc;
+        }, {});
+
+        const topicPerf = attempts.reduce((acc, attempt) => {
+            if (!attempt.questions || !attempt.questions.topics) return acc;
+            const topic = attempt.questions.topics.name;
+            if (!acc[topic]) acc[topic] = { correct: 0, total: 0 };
+            acc[topic].total++;
+            if (attempt.score === 1) acc[topic].correct++;
+            return acc;
+        }, {});
+        
+        const topicAccuracies = Object.entries(topicPerf).map(([topic, data]) => ({ name: topic, accuracy: (data.correct / data.total) * 100 })).sort((a, b) => b.accuracy - a.accuracy);
+        const strongTopics = topicAccuracies.filter(t => t.accuracy >= 75).slice(0, 5);
+        const weakTopics = topicAccuracies.filter(t => t.accuracy < 50).sort((a, b) => a.accuracy - b.accuracy).slice(0, 5);
+        
+        container.innerHTML = `
+            <div class="section-header"><h2>My Analysis</h2><p>An overview of your performance across all topics.</p></div>
+            <div class="stats-grid">
+                <div class="stat-card"><h4>Overall Accuracy</h4><div class="value" data-value="${overallAccuracy.toFixed(1)}">0%</div></div>
+                <div class="stat-card"><h4>Questions Answered</h4><div class="value" data-value="${totalQuestions}">0</div></div>
+                <div class="stat-card"><h4>Correct Answers</h4><div class="value" data-value="${correctAnswers}">0</div></div>
+                <div class="stat-card"><h4>Incorrect Answers</h4><div class="value" data-value="${incorrectAnswers}">0</div></div>
+            </div>
+            <div class="chart-container"><h3>Performance by Subject</h3><canvas id="subjectPerfChart"></canvas></div>
+            <div class="topic-analysis-grid">
+                <div class="topic-analysis-list strong-topics"><h4>💪 Strong Topics</h4><ul>${strongTopics.map(t => `<li>${t.name}</li>`).join('') || '<li>Complete more quizzes!</li>'}</ul></div>
+                <div class="topic-analysis-list weak-topics"><h4>🧠 Topics to Revise</h4><ul>${weakTopics.map(t => `<li>${t.name}</li>`).join('') || '<li>Looking good!</li>'}</ul></div>
+            </div>
+        `;
+        
+        container.querySelectorAll('.stat-card .value').forEach(el => {
+            const isPercent = el.textContent.includes('%');
+            const endValue = parseFloat(el.dataset.value);
+            animateValue(el, 0, endValue, 1500);
+            if(isPercent) el.innerHTML = endValue.toFixed(1) + "%";
+        });
+        
+        const ctx = document.getElementById('subjectPerfChart').getContext('2d');
+        if(myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(subjectPerf),
+                datasets: [{
+                    label: 'Accuracy (%)',
+                    data: Object.values(subjectPerf).map(s => (s.correct / s.total * 100).toFixed(1)),
+                    backgroundColor: ['#4f46e5', '#10b981', '#f59e0b'],
+                    borderRadius: 5
+                }]
+            },
+            options: { scales: { y: { beginAtZero: true, max: 100 } }, responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    async function loadPlatformAnalysis() {
+        const container = document.getElementById('teacher-analysis');
+        showLoader(container);
+
+        const { data: attempts, error } = await supabaseClient.from('attempts').select('score, questions(topics(name, subject))');
+        if (error || attempts.length === 0) { container.innerHTML = `<p>No student attempt data available yet.</p>`; return; }
+
+        const totalAttempts = attempts.length;
+        const totalCorrect = attempts.filter(a => a.score === 1).length;
+        const avgAccuracy = (totalCorrect / totalAttempts * 100);
+        const { count: studentCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
+        
+        const topicPerf = attempts.reduce((acc, attempt) => {
+            if (!attempt.questions || !attempt.questions.topics) return acc;
+            const topic = attempt.questions.topics.name;
+            if (!acc[topic]) acc[topic] = { correct: 0, total: 0 };
+            acc[topic].total++;
+            if (attempt.score === 1) acc[topic].correct++;
+            return acc;
+        }, {});
+
+        const topicAccuracies = Object.entries(topicPerf).map(([topic, data]) => ({ name: topic, accuracy: (data.correct / data.total) * 100 }));
+        const mostDifficultTopics = topicAccuracies.sort((a,b) => a.accuracy - b.accuracy).slice(0, 5);
+
+        container.innerHTML = `
+            <div class="section-header"><h2>Platform Analytics</h2><p>A high-level overview of student performance.</p></div>
+            <div class="stats-grid">
+                <div class="stat-card"><h4>Total Students</h4><div class="value" data-value="${studentCount || 0}">0</div></div>
+                <div class="stat-card"><h4>Total Attempts</h4><div class="value" data-value="${totalAttempts}">0</div></div>
+                <div class="stat-card"><h4>Average Accuracy</h4><div class="value" data-value="${avgAccuracy.toFixed(1)}">0%</div></div>
+            </div>
+            <div class="topic-analysis-grid"><div class="topic-analysis-list weak-topics"><h4>Most Difficult Topics (Lowest Accuracy)</h4><ul>${mostDifficultTopics.map(t => `<li>${t.name} (${t.accuracy.toFixed(1)}%)</li>`).join('')}</ul></div></div>
+        `;
+        
+        container.querySelectorAll('.stat-card .value').forEach(el => {
+            const isPercent = el.textContent.includes('%');
+            const endValue = parseFloat(el.dataset.value);
+            animateValue(el, 0, endValue, 1500);
+            if(isPercent) el.innerHTML = endValue.toFixed(1) + "%";
+        });
+    }
+
+    // --- ACHIEVEMENTS / BADGES --- //
+    async function loadStudentBadges() {
+        const container = document.getElementById('student-badges');
+        showLoader(container);
+        const { data: allBadges, error: badgesError } = await supabaseClient.from('badges').select('*');
+        const { data: studentBadges, error: studentBadgesError } = await supabaseClient.from('student_badges').select('badge_id').eq('user_id', currentUser.id);
+        if (badgesError || studentBadgesError) { container.innerHTML = `<p>Could not load achievements.</p>`; return; }
+        const unlockedBadgeIds = new Set(studentBadges.map(b => b.badge_id));
+        let html = `<div class="section-header"><h2>My Achievements</h2><p>Collect badges by reaching milestones on your learning journey!</p></div><div class="badges-grid">`;
+        allBadges.sort((a,b) => a.id - b.id).forEach(badge => {
+            html += `<div class="badge-card ${unlockedBadgeIds.has(badge.id) ? 'unlocked' : ''}"><div class="badge-icon">${badge.icon}</div><h4>${badge.name}</h4><p>${badge.description}</p></div>`;
+        });
+        html += `</div>`;
+        container.innerHTML = html;
+    }
+
+    async function checkAndAwardBadges() {
+        const { data: allBadges } = await supabaseClient.from('badges').select('*');
+        const { data: studentBadges } = await supabaseClient.from('student_badges').select('badge_id').eq('user_id', currentUser.id);
+        const unlockedBadgeIds = new Set(studentBadges.map(b => b.badge_id));
+        const newBadgesToAward = [];
+        const { data: perfData } = await supabaseClient.from('student_performance').select('total_score').eq('user_id', currentUser.id).single();
+        const totalScore = perfData.total_score;
+        const { count: attemptsCount } = await supabaseClient.from('attempts').select('*', { count: 'exact', head: true }).eq('user_id', currentUser.id);
+        
+        for (const badge of allBadges) {
+            if (unlockedBadgeIds.has(badge.id)) continue;
+            let conditionMet = false;
+            switch(badge.condition_type) {
+                case 'total_score': if(totalScore >= badge.condition_value) conditionMet = true; break;
+                case 'quizzes_completed': if(attemptsCount / 30 >= badge.condition_value) conditionMet = true; break;
+            }
+            if(conditionMet) {
+                newBadgesToAward.push({ user_id: currentUser.id, badge_id: badge.id });
+                showBadgeNotification(badge);
+            }
+        }
+        if (newBadgesToAward.length > 0) {
+            await supabaseClient.from('student_badges').insert(newBadgesToAward);
+        }
+    }
+
+    function showBadgeNotification(badge) {
+        const notification = document.getElementById('badge-notification');
+        document.getElementById('badge-notification-icon').textContent = badge.icon;
+        document.getElementById('badge-notification-name').textContent = badge.name;
+        notification.classList.add('show');
+        setTimeout(() => { notification.classList.remove('show'); }, 5000);
+    }
+    
+    // --- DISCUSSION BOARDS --- //
+    async function showDiscussionBoard(topicId, topicName) {
+        showPage('discussion-board-page');
+        document.getElementById('discussion-topic-title').textContent = `Discussions for: ${topicName}`;
+        document.getElementById('discussion-thread-view').classList.add('hidden');
+        const listContainer = document.getElementById('discussion-thread-list');
+        listContainer.classList.remove('hidden');
+        showLoader(listContainer, 'list');
+
+        const { data: threads, error } = await supabaseClient.from('discussion_threads').select('*, users(username)').eq('topic_id', topicId).order('created_at', { ascending: false });
+        if (error) { listContainer.innerHTML = `<p>Could not load discussions.</p>`; return; }
+
+        let html = `<div class="section-header"><h2>Threads</h2><p>Start a new conversation or join an existing one.</p></div><ul class="threads-list">`;
+        threads.forEach(thread => {
+            const author = thread.users ? thread.users.username : 'Teacher';
+            html += `<li class="thread-item" data-thread-id="${thread.id}"><h4 class="thread-title">${thread.title}</h4><p class="thread-meta">Started by ${author} on ${new Date(thread.created_at).toLocaleDateString()}</p></li>`;
+        });
+        html += `</ul>
+            <form id="new-thread-form" class="new-thread-form">
+                <div class="section-header"><h4>Start a New Thread</h4></div>
+                <div class="form-group"><input type="text" id="new-thread-title" class="form-group input" placeholder="Thread Title" required style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); color: var(--text-color); background-color: var(--card-background-opaque);"/></div>
+                <div class="form-group"><textarea id="new-thread-content" class="form-control" placeholder="Your question or comment..." required></textarea></div>
+                <button type="submit" class="btn btn-primary">Post Thread</button>
+            </form>
+        `;
+        listContainer.innerHTML = html;
+
+        document.getElementById('new-thread-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('new-thread-title').value;
+            const content = document.getElementById('new-thread-content').value;
+            const authorId = currentUser.role === 'student' ? currentUser.id : null;
+
+            const { data: threadData, error: threadError } = await supabaseClient.from('discussion_threads').insert({ topic_id: topicId, title, author_id: authorId }).select().single();
+            if (threadError) { showFeedback('Could not create thread.', 'error'); return; }
+            const { error: postError } = await supabaseClient.from('discussion_posts').insert({ thread_id: threadData.id, content, author_id: authorId, author_name: currentUser.username });
+            if (postError) { showFeedback('Could not create initial post.', 'error'); } else {
+                showFeedback('Thread created!', 'success');
+                showDiscussionBoard(topicId, topicName);
+            }
+        });
+    }
+
+    async function showThreadView(threadId) {
+        document.getElementById('discussion-thread-list').classList.add('hidden');
+        const viewContainer = document.getElementById('discussion-thread-view');
+        viewContainer.classList.remove('hidden');
+        showLoader(viewContainer);
+        
+        const { data: thread } = await supabaseClient.from('discussion_threads').select('*').eq('id', threadId).single();
+        const { data: posts } = await supabaseClient.from('discussion_posts').select('*').eq('thread_id', threadId).order('created_at');
+        
+        let html = `<div class="section-header"><h2 data-thread-id="${thread.id}">${thread.title}</h2></div><ul class="post-list">`;
+        posts.forEach(post => {
+            const deleteButton = currentUser.role === 'teacher' ? `<button class="delete-btn" data-post-id="${post.id}">Delete</button>` : '';
+            html += `<li class="post-item"><div class="post-header"><span class="post-author">${post.author_name}</span><div><span class="post-date">${new Date(post.created_at).toLocaleString()}</span>${deleteButton}</div></div><p class="post-content">${post.content.replace(/\n/g, '<br>')}</p></li>`;
+        });
+        html += `</ul>
+            <form id="new-post-form" class="new-post-form">
+                <div class="section-header"><h4>Post a Reply</h4></div>
+                <div class="form-group"><textarea id="new-post-content" class="form-control" placeholder="Your reply..." required></textarea></div>
+                <button type="submit" class="btn btn-primary">Post Reply</button>
+            </form>
+        `;
+        viewContainer.innerHTML = html;
+        
+        document.getElementById('new-post-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('new-post-content').value;
+            const authorId = currentUser.role === 'student' ? currentUser.id : null;
+            const { error } = await supabaseClient.from('discussion_posts').insert({ thread_id: threadId, content, author_id: authorId, author_name: currentUser.username });
+            if (error) { showFeedback('Could not post reply.', 'error'); } else { showThreadView(threadId); }
+        });
+    }
+    
+    async function deleteDiscussionPost(postId) {
+        if(currentUser.role !== 'teacher') return;
+        const currentThreadId = document.querySelector('[data-thread-id]').dataset.threadId;
+        const { error } = await supabaseClient.from('discussion_posts').delete().eq('id', postId);
+        if (error) { showFeedback('Could not delete post.', 'error'); } else {
+            showFeedback('Post deleted.', 'success');
+            showThreadView(currentThreadId);
+        }
+    }
+    
+    // --- THEME --- //
+    function applyTheme(theme) {
+        const isDark = theme === 'dark';
+        document.documentElement.classList.toggle('dark', isDark);
+        document.querySelector('#moon-icon-teacher').style.display = isDark ? 'none' : 'block';
+        document.querySelector('#sun-icon-teacher').style.display = isDark ? 'block' : 'none';
+    }
+
+    function toggleTheme() {
+        const isDark = document.documentElement.classList.contains('dark');
+        const newTheme = isDark ? 'light' : 'dark';
+        localStorage.setItem('theme', newTheme);
+        applyTheme(newTheme);
+    }
+
+    // --- EVENT LISTENERS --- //
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        applyTheme(savedTheme);
+
+        document.getElementById('show-signup').addEventListener('click', () => { showPage('signup-page'); });
+        document.getElementById('show-login').addEventListener('click', () => { showPage('login-page'); });
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        document.getElementById('theme-toggle-teacher').addEventListener('click', toggleTheme);
+
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        document.getElementById('signup-form').addEventListener('submit', handleSignup);
+        
+        document.body.addEventListener('click', async (e) => {
+            if (e.target.classList.contains('btn-logout')) handleLogout();
+            if (e.target.closest('.nav-btn')) {
+                const navBtn = e.target.closest('.nav-btn');
+                const pageSelector = navBtn.closest('.page').id === 'student-dashboard-page' ? '#student-dashboard-page' : '#teacher-dashboard-page';
+                switchDashboardTab(navBtn, pageSelector);
+            }
+            if (e.target.classList.contains('btn-quiz')) startQuiz(e.target.dataset.topicId, e.target.dataset.topicName);
+            if (e.target.id === 'close-quiz-btn' || e.target.id === 'finish-quiz-btn') { 
+                document.getElementById('quiz-modal').classList.add('hidden'); 
+                clearInterval(currentTimer);
+                quizState = {}; // THE FIX IS HERE: Reset state completely on close.
+            }
+            if (e.target.classList.contains('option-btn') && !e.target.classList.contains('disabled')) selectOption(e.target);
+            if (e.target.id === 'next-question-btn') nextQuestion();
+            if (e.target.classList.contains('btn-discuss')) showDiscussionBoard(e.target.dataset.topicId, e.target.dataset.topicName);
+            if (e.target.id === 'back-to-topics-btn') showStudentDashboard();
+            if (e.target.closest('.thread-item')) showThreadView(e.target.closest('.thread-item').dataset.threadId);
+            if (e.target.classList.contains('delete-btn') && confirm('Are you sure?')) deleteDiscussionPost(e.target.dataset.postId);
+        });
+        
+        document.body.addEventListener('change', async (e) => {
+            if (e.target.classList.contains('topic-toggle')) {
+                const { error } = await supabaseClient.from('topics').update({ active_status: e.target.checked }).eq('id', e.target.dataset.topicId);
+                if (error) { showFeedback('Failed to update status.', 'error'); e.target.checked = !e.target.checked; } 
+                else { showFeedback('Topic status updated!', 'success'); }
+            }
+        });
+        
+        const storedUser = sessionStorage.getItem('currentUser');
+        if (storedUser) {
+            currentUser = JSON.parse(storedUser);
+            if (currentUser.role === 'student') showStudentDashboard();
+            else if (currentUser.role === 'teacher') showTeacherDashboard();
+        } else {
+            showPage('login-page');
+        }
+    });
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
