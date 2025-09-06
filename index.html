@@ -129,7 +129,7 @@
             color: var(--text-color);
         }
 
-        .form-group input {
+        .form-group input, .form-group textarea, .form-group select {
             width: 100%;
             padding: 0.75rem 1rem;
             border-radius: 8px;
@@ -138,9 +138,10 @@
             transition: border-color 0.2s, box-shadow 0.2s;
             background-color: var(--card-background-opaque);
             color: var(--text-color);
+            font-family: 'Inter', sans-serif;
         }
 
-        .form-group input:focus {
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
@@ -188,6 +189,13 @@
 
         .switch-form a:hover {
             text-decoration: underline;
+        }
+        
+        .credit {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.875rem;
+            color: var(--muted-text-color);
         }
         
         /* --- Feedback Message --- */
@@ -242,7 +250,7 @@
             gap: 1rem;
         }
 
-        #theme-toggle {
+        .theme-toggle-btn {
             background: none;
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -254,14 +262,14 @@
             color: var(--muted-text-color);
             transition: all 0.2s;
         }
-        #theme-toggle:hover {
+        .theme-toggle-btn:hover {
             background-color: var(--nav-hover-bg);
             color: var(--text-color);
         }
-        #theme-toggle svg { width: 20px; height: 20px; }
-        .dark #moon-icon { display: none; }
-        .dark #sun-icon { display: block; }
-        #sun-icon { display: none; }
+        .theme-toggle-btn svg { width: 20px; height: 20px; }
+        .dark .moon-icon { display: none; }
+        .dark .sun-icon { display: block; }
+        .sun-icon { display: none; }
 
         .btn-logout {
             background-color: transparent;
@@ -328,6 +336,17 @@
         .section-header h2 { font-size: 1.75rem; margin-bottom: 0.25rem; }
         .section-header p { color: var(--muted-text-color); }
         
+        .points-counter {
+            font-weight: 600;
+            color: var(--primary-color);
+            background-color: var(--nav-active-bg);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         /* --- Topic List & Tables --- */
         .subject-section { margin-bottom: 2.5rem; }
         .subject-section h3 {
@@ -361,7 +380,7 @@
         .topic-status.active { color: #15803d; background-color: #dcfce7; }
         .topic-status.inactive { color: #991b1b; background-color: #fee2e2; }
         
-        .btn-quiz, .btn-discuss {
+        .btn-quiz, .btn-discuss, .btn-edit-questions {
             background-color: var(--primary-color);
             color: white;
             padding: 0.5rem 1.25rem;
@@ -373,14 +392,14 @@
             border: none;
             margin-left: 0.5rem;
         }
-        .btn-quiz:hover, .btn-discuss:hover { background-color: var(--primary-dark); }
+        .btn-quiz:hover, .btn-discuss:hover, .btn-edit-questions:hover { background-color: var(--primary-dark); }
 
         .leaderboard-rank { font-weight: 700; min-width: 30px; }
         .leaderboard-name { flex-grow: 1; font-weight: 500; }
         .leaderboard-score, .student-score { font-weight: 700; color: var(--primary-color); }
         
-        /* --- Quiz Modal --- */
-        .quiz-modal {
+        /* --- Quiz & CMS Modal --- */
+        .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -394,7 +413,7 @@
             animation: fadeIn 0.3s;
         }
 
-        .quiz-container {
+        .modal-container {
             background-color: var(--card-background-opaque);
             width: 90%;
             max-width: 800px;
@@ -412,17 +431,17 @@
             to { transform: scale(1); opacity: 1; }
         }
 
-        .quiz-header {
+        .modal-header {
             padding: 1rem 1.5rem;
             border-bottom: 1px solid var(--border-color);
         }
-        .quiz-header-top {
+        .modal-header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 0.75rem;
         }
-        .quiz-header h2 { font-size: 1.25rem; }
+        .modal-header h2 { font-size: 1.25rem; }
         #quiz-timer, #quiz-progress-text { font-weight: 600; color: var(--primary-color); }
         #quiz-progress-bar-container {
             width: 100%;
@@ -438,7 +457,7 @@
             transition: width 0.3s ease;
         }
         
-        .quiz-body { padding: 2rem; overflow-y: auto; }
+        .modal-body { padding: 2rem; overflow-y: auto; }
         #question-text { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; }
         
         .options-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
@@ -455,7 +474,7 @@
         .dark .option-btn.incorrect { background-color: #991b1b; color: #fee2e2; }
         .option-btn.disabled { cursor: not-allowed; opacity: 0.7; }
 
-        .quiz-footer {
+        .modal-footer {
             padding: 1.5rem; border-top: 1px solid var(--border-color);
             display: flex; justify-content: space-between;
         }
@@ -582,15 +601,63 @@
             font-family: 'Inter', sans-serif; min-height: 100px;
             resize: vertical; color: var(--text-color); background-color: var(--card-background-opaque);
         }
-        textarea.form-control:focus {
-             outline: none; border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
-        }
         .btn-secondary {
             background-color: var(--border-color); color: var(--text-color);
             box-shadow: 0 4px 6px rgba(0,0,0, 0.05);
         }
         .btn-secondary:hover { background-color: var(--muted-text-color); }
+
+        /* CMS Styles */
+        .cms-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .question-list { list-style: none; }
+        .question-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .question-item p { margin: 0; font-weight: 500; }
+        .question-item-actions { display: flex; gap: 0.5rem; }
+        .btn-edit-q, .btn-delete-q {
+            background: none; border: none; cursor: pointer; padding: 0.25rem;
+        }
+        .btn-edit-q { color: var(--primary-color); }
+        .btn-delete-q { color: var(--error-color); }
+        .btn-edit-q:hover, .btn-delete-q:hover { opacity: 0.7; }
+
+        /* AI Assistant Styles */
+        .ai-generated-question {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .ai-generated-question h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .ai-generated-question ul {
+            list-style-position: inside;
+            padding-left: 0.5rem;
+            margin-bottom: 1rem;
+        }
+         .ai-generated-question .correct-answer {
+            font-weight: 600;
+            color: var(--success-color);
+        }
+        .ai-generated-question button {
+            width: auto;
+            padding: 0.5rem 1rem;
+        }
 
         @media (max-width: 768px) {
             .dashboard-body { flex-direction: column; }
@@ -631,6 +698,7 @@
                     <button type="submit" class="btn btn-primary">Log In</button>
                 </form>
                 <p class="switch-form">Don't have an account? <a id="show-signup">Sign Up</a></p>
+                <p class="credit">Made By - Akshaj Anand</p>
             </div>
         </div>
 
@@ -655,6 +723,7 @@
                     <button type="submit" class="btn btn-primary">Sign Up</button>
                 </form>
                 <p class="switch-form">Already have an account? <a id="show-login">Log In</a></p>
+                <p class="credit">Made By - Akshaj Anand</p>
             </div>
         </div>
 
@@ -664,9 +733,10 @@
                 <header class="dashboard-header">
                     <h1>Student Dashboard <span id="student-username"></span></h1>
                     <div class="header-controls">
-                        <button id="theme-toggle" title="Toggle Theme">
-                            <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
-                            <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
+                        <div class="points-counter">🏆 Total Points: <span id="student-total-points">0</span></div>
+                        <button class="theme-toggle-btn" title="Toggle Theme">
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
                         </button>
                         <button class="btn-logout">Logout</button>
                     </div>
@@ -706,9 +776,9 @@
                 <header class="dashboard-header">
                     <h1>Teacher Dashboard <span id="teacher-username"></span></h1>
                      <div class="header-controls">
-                        <button id="theme-toggle-teacher" title="Toggle Theme">
-                            <svg id="moon-icon-teacher" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
-                            <svg id="sun-icon-teacher" style="display:none" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
+                        <button class="theme-toggle-btn" title="Toggle Theme">
+                            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" /></svg>
+                            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" /></svg>
                         </button>
                         <button class="btn-logout">Logout</button>
                     </div>
@@ -718,6 +788,10 @@
                         <button class="nav-btn active" data-tab="teacher-topics">
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-5.747-6.99H17.75" /></svg>
                             Manage Topics
+                        </button>
+                        <button class="nav-btn" data-tab="teacher-cms">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
+                            Content Management
                         </button>
                         <button class="nav-btn" data-tab="teacher-analysis">
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -734,6 +808,7 @@
                     </nav>
                     <main class="dashboard-content">
                         <div id="teacher-topics" class="content-section"></div>
+                        <div id="teacher-cms" class="content-section hidden"></div>
                         <div id="teacher-analysis" class="content-section hidden"></div>
                         <div id="teacher-students" class="content-section hidden"></div>
                         <div id="teacher-leaderboard" class="content-section hidden"></div>
@@ -758,11 +833,11 @@
 
     </div>
 
-        <!-- Quiz Modal -->
-    <div id="quiz-modal" class="quiz-modal hidden">
-        <div class="quiz-container">
-            <div class="quiz-header">
-                <div class="quiz-header-top">
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-header">
+                <div class="modal-header-top">
                     <h2 id="quiz-topic-name">Quiz</h2>
                     <div id="quiz-progress-text">Q: 1/30</div>
                     <div id="quiz-timer">Time: 15:00</div>
@@ -771,11 +846,11 @@
                     <div id="quiz-progress-bar"></div>
                 </div>
             </div>
-            <div id="quiz-body" class="quiz-body">
+            <div id="quiz-body" class="modal-body">
                 <p id="question-text">Question text will appear here.</p>
                 <div class="options-grid" id="options-container"></div>
             </div>
-            <div id="quiz-footer" class="quiz-footer">
+            <div id="quiz-footer" class="modal-footer">
                 <button id="close-quiz-btn" class="btn btn-secondary">Close</button>
                 <button id="next-question-btn" class="btn btn-primary">Next</button>
             </div>
@@ -783,6 +858,107 @@
         </div>
     </div>
     
+    <!-- Question CMS Modal -->
+    <div id="question-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2 id="question-modal-title">Add New Question</h2>
+            </div>
+            <div class="modal-body">
+                <form id="question-form">
+                    <input type="hidden" id="question-id">
+                    <input type="hidden" id="question-topic-id">
+                    <div class="form-group">
+                        <label for="question-form-text">Question Text</label>
+                        <textarea id="question-form-text" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="question-form-option-a">Option A</label>
+                        <input type="text" id="question-form-option-a" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="question-form-option-b">Option B</label>
+                        <input type="text" id="question-form-option-b" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="question-form-option-c">Option C</label>
+                        <input type="text" id="question-form-option-c" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="question-form-option-d">Option D</label>
+                        <input type="text" id="question-form-option-d" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="question-form-correct">Correct Answer</label>
+                        <select id="question-form-correct" required>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="close-question-modal-btn" type="button" class="btn btn-secondary">Cancel</button>
+                <button id="save-question-btn" type="submit" form="question-form" class="btn btn-primary">Save Question</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Topic CMS Modal -->
+    <div id="topic-modal" class="modal-overlay hidden">
+        <div class="modal-container" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2>Add New Topic</h2>
+            </div>
+            <div class="modal-body">
+                <form id="topic-form">
+                    <div class="form-group">
+                        <label for="topic-form-name">Topic Name</label>
+                        <input type="text" id="topic-form-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="topic-form-subject">Subject</label>
+                        <select id="topic-form-subject" required>
+                            <option value="History">History</option>
+                            <option value="Civics">Civics</option>
+                            <option value="Geography">Geography</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button id="close-topic-modal-btn" type="button" class="btn btn-secondary">Cancel</button>
+                <button id="save-topic-btn" type="submit" form="topic-form" class="btn btn-primary">Save Topic</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Assistant Modal -->
+    <div id="ai-assistant-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>AI Question Generator</h2>
+            </div>
+            <div class="modal-body">
+                <form id="ai-generation-form" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;">
+                    <div class="form-group" style="flex-grow:1; margin:0;">
+                        <label for="ai-num-questions">Number of questions to generate:</label>
+                        <input type="number" id="ai-num-questions" value="5" min="1" max="10">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: auto; align-self: end;">Generate</button>
+                </form>
+                <div id="ai-results-container">
+                    <p>Click "Generate" to create new questions for this topic.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="close-ai-modal-btn" type="button" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Badge Notification -->
     <div id="badge-notification">
         <div id="badge-notification-icon" class="badge-icon"></div>
@@ -809,7 +985,7 @@
     
     const TEACHER_ACCOUNTS = { 'akshajanand': 'teacher@123', 'kuhusinha': 'teacher@123' };
     let currentUser = null, quizState = {}, currentTimer = null, myChart = null;
-    let quizLoading = false; // Flag to prevent quiz race conditions
+    let quizLoading = false;
 
     // --- UTILITY & PAGE NAVIGATION --- //
     function showFeedback(message, type = 'info', duration = 3000) {
@@ -836,6 +1012,7 @@
     function showStudentDashboard() {
         document.getElementById('student-username').textContent = `(${currentUser.username})`;
         showPage('student-dashboard-page');
+        updateStudentPointsDisplay();
         loadStudentTopics();
         switchDashboardTab(document.querySelector('#student-dashboard-page .nav-btn[data-tab="student-topics"]'), '#student-dashboard-page');
     }
@@ -846,12 +1023,31 @@
         loadTeacherTopics();
         switchDashboardTab(document.querySelector('#teacher-dashboard-page .nav-btn[data-tab="teacher-topics"]'), '#teacher-dashboard-page');
     }
+    
+    async function updateStudentPointsDisplay() {
+        if (!currentUser || currentUser.role !== 'student') return;
+        const pointsEl = document.getElementById('student-total-points');
+        if (!pointsEl) return;
+
+        const { data, error } = await supabaseClient
+            .from('student_performance')
+            .select('total_score')
+            .eq('user_id', currentUser.id)
+            .single();
+        
+        if (error) {
+            console.error("Could not fetch student points", error);
+            pointsEl.textContent = 'N/A';
+        } else {
+            pointsEl.textContent = data.total_score;
+        }
+    }
 
     // --- AUTHENTICATION --- //
     async function handleLogin(e) {
         e.preventDefault();
         showFeedback('Logging in...', 'info', 2000);
-        const username = document.getElementById('login-username').value;
+        const username = document.getElementById('login-username').value.trim();
         const password = document.getElementById('login-password').value;
 
         if (TEACHER_ACCOUNTS[username] && TEACHER_ACCOUNTS[username] === password) {
@@ -879,9 +1075,14 @@
 
     async function handleSignup(e) {
         e.preventDefault();
-        const username = document.getElementById('signup-username').value;
-        const email = document.getElementById('signup-email').value;
+        const username = document.getElementById('signup-username').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
         const password = document.getElementById('signup-password').value;
+
+        if (TEACHER_ACCOUNTS[username]) {
+            showFeedback('This username is reserved. Please choose another.', 'error');
+            return;
+        }
 
         const { data: userData, error: userError } = await supabaseClient.from('users').insert([{ username, email, password }]).select().single();
         if (userError) {
@@ -912,6 +1113,7 @@
             case 'student-leaderboard': loadLeaderboard('#student-leaderboard'); break;
             case 'student-badges': loadStudentBadges(); break;
             case 'teacher-topics': loadTeacherTopics(); break;
+            case 'teacher-cms': loadCMSView(); break;
             case 'teacher-analysis': loadPlatformAnalysis(); break;
             case 'teacher-students': loadAllStudents(); break;
             case 'teacher-leaderboard': loadLeaderboard('#teacher-leaderboard'); break;
@@ -988,27 +1190,23 @@
 
     // --- QUIZ LOGIC --- //
     async function startQuiz(topicId, topicName) {
-        // Prevent starting a new quiz while another is loading to avoid race conditions.
         if (quizLoading) return;
         quizLoading = true;
-
-        // Set a loading state without destroying the elements
+        
         document.getElementById('question-text').textContent = 'Loading questions...';
         document.getElementById('options-container').innerHTML = '<div class="loader"></div>';
-        
         document.getElementById('quiz-topic-name').textContent = topicName;
         document.getElementById('quiz-modal').classList.remove('hidden');
         document.getElementById('quiz-result').classList.add('hidden');
         document.getElementById('quiz-body').classList.remove('hidden');
         document.getElementById('quiz-footer').style.display = 'flex';
-        document.getElementById('quiz-progress-bar').style.width = '0%'; // Reset progress bar
-
+        document.getElementById('quiz-progress-bar').style.width = '0%';
 
         const { data, error } = await supabaseClient.from('questions').select('*').eq('topic_id', topicId);
         if (error || data.length === 0) {
             showFeedback('Could not load questions for this topic.', 'error');
             document.getElementById('quiz-modal').classList.add('hidden'); 
-            quizLoading = false; // Reset flag on error
+            quizLoading = false;
             return;
         }
         
@@ -1016,27 +1214,15 @@
         quizState = { questions: shuffledQuestions.slice(0, 30), currentQuestionIndex: 0, score: 0, attempts: [] };
         renderQuestion();
         startTimer(15 * 60);
-        quizLoading = false; // Reset flag on success
+        quizLoading = false;
     }
     
     function renderQuestion() {
-        if (!quizState.questions || quizState.currentQuestionIndex >= quizState.questions.length) { 
-            endQuiz(); 
-            return; 
-        }
-        
-        const shuffledQuestions = data.sort(() => 0.5 - Math.random());
-        quizState = { questions: shuffledQuestions.slice(0, 30), currentQuestionIndex: 0, score: 0, attempts: [] };
-        renderQuestion();
-        startTimer(15 * 60);
-    }
-    
-    function renderQuestion() {
-        if (quizState.currentQuestionIndex >= quizState.questions.length) { endQuiz(); return; }
+        if (!quizState.questions || quizState.currentQuestionIndex >= quizState.questions.length) { endQuiz(); return; }
         const question = quizState.questions[quizState.currentQuestionIndex];
         const progress = ((quizState.currentQuestionIndex) / quizState.questions.length) * 100;
         document.getElementById('quiz-progress-bar').style.width = `${progress}%`;
-        document.getElementById('question-text').textContent = question.question_text || question.question; // The fix is here
+        document.getElementById('question-text').textContent = question.question_text || question.question;
         document.getElementById('quiz-progress-text').textContent = `Q: ${quizState.currentQuestionIndex + 1}/${quizState.questions.length}`;
         document.getElementById('options-container').innerHTML = `<button class="option-btn" data-option="A">${question.option_a}</button><button class="option-btn" data-option="B">${question.option_b}</button><button class="option-btn" data-option="C">${question.option_c}</button><button class="option-btn" data-option="D">${question.option_d}</button>`;
         document.getElementById('next-question-btn').classList.add('hidden');
@@ -1047,8 +1233,14 @@
         const question = quizState.questions[quizState.currentQuestionIndex];
         const isCorrect = selectedOption === question.correct_answer;
         let score = 0;
-        if (isCorrect) { quizState.score++; score = 1; selectedBtn.classList.add('correct'); } 
-        else { selectedBtn.classList.add('incorrect'); document.querySelector(`.option-btn[data-option="${question.correct_answer}"]`)?.classList.add('correct'); }
+        if (isCorrect) { 
+            quizState.score += 2; 
+            score = 2; 
+            selectedBtn.classList.add('correct'); 
+        } else { 
+            selectedBtn.classList.add('incorrect'); 
+            document.querySelector(`.option-btn[data-option="${question.correct_answer}"]`)?.classList.add('correct'); 
+        }
         quizState.attempts.push({ user_id: currentUser.id, question_id: question.id, selected_option: selectedOption, score: score });
         document.querySelectorAll('.option-btn').forEach(btn => btn.classList.add('disabled'));
         document.getElementById('next-question-btn').classList.remove('hidden');
@@ -1062,16 +1254,38 @@
     async function endQuiz() {
         clearInterval(currentTimer);
         document.getElementById('quiz-progress-bar').style.width = `100%`;
+        
         const { error: attemptsError } = await supabaseClient.from('attempts').insert(quizState.attempts);
         if (attemptsError) { showFeedback('Error saving quiz results.', 'error'); }
-        const { error: scoreError } = await supabaseClient.rpc('increment_score', { user_id_in: currentUser.id, score_to_add: quizState.score });
-        if (scoreError) { showFeedback('Error updating total score.', 'error'); } 
-        else { await checkAndAwardBadges(); }
+
+        const { data: performanceData, error: fetchError } = await supabaseClient
+            .from('student_performance')
+            .select('total_score')
+            .eq('user_id', currentUser.id)
+            .single();
+
+        if (fetchError) {
+            showFeedback('Error fetching current score.', 'error');
+        } else {
+            const newTotalScore = performanceData.total_score + quizState.score;
+            const { error: updateError } = await supabaseClient
+                .from('student_performance')
+                .update({ total_score: newTotalScore })
+                .eq('user_id', currentUser.id);
+
+            if (updateError) {
+                showFeedback('Error updating total score.', 'error');
+            } else {
+                await checkAndAwardBadges();
+                await updateStudentPointsDisplay();
+            }
+        }
+
         document.getElementById('quiz-body').classList.add('hidden');
         document.getElementById('quiz-footer').style.display = 'none';
         const resultContainer = document.getElementById('quiz-result');
         resultContainer.classList.remove('hidden');
-        resultContainer.innerHTML = `<h2>Quiz Complete!</h2><p>You scored ${quizState.score} out of ${quizState.questions.length}</p><button id="finish-quiz-btn" class="btn btn-primary">Finish</button>`;
+        resultContainer.innerHTML = `<h2>Quiz Complete!</h2><p>You scored ${quizState.score} out of ${quizState.questions.length * 2} points</p><button id="finish-quiz-btn" class="btn btn-primary">Finish</button>`;
     }
 
     function startTimer(duration) {
@@ -1104,13 +1318,12 @@
     async function loadStudentAnalysis() {
         const container = document.getElementById('student-analysis');
         showLoader(container);
-
         const { data: attempts, error } = await supabaseClient.from('attempts').select('score, questions(topics(name, subject))').eq('user_id', currentUser.id);
         if (error || !attempts) { container.innerHTML = `<p>Could not load your performance data.</p>`; return; }
         if (attempts.length === 0) { container.innerHTML = `<div class="section-header"><h2>My Analysis</h2><p>Complete some quizzes to see your performance analysis here.</p></div>`; return; }
 
         const totalQuestions = attempts.length;
-        const correctAnswers = attempts.filter(a => a.score === 1).length;
+        const correctAnswers = attempts.filter(a => a.score > 0).length;
         const incorrectAnswers = totalQuestions - correctAnswers;
         const overallAccuracy = totalQuestions > 0 ? ((correctAnswers / totalQuestions) * 100) : 0;
         
@@ -1119,7 +1332,7 @@
             const subject = attempt.questions.topics.subject;
             if (!acc[subject]) acc[subject] = { correct: 0, total: 0 };
             acc[subject].total++;
-            if (attempt.score === 1) acc[subject].correct++;
+            if (attempt.score > 0) acc[subject].correct++;
             return acc;
         }, {});
 
@@ -1128,7 +1341,7 @@
             const topic = attempt.questions.topics.name;
             if (!acc[topic]) acc[topic] = { correct: 0, total: 0 };
             acc[topic].total++;
-            if (attempt.score === 1) acc[topic].correct++;
+            if (attempt.score > 0) acc[topic].correct++;
             return acc;
         }, {});
         
@@ -1178,12 +1391,11 @@
     async function loadPlatformAnalysis() {
         const container = document.getElementById('teacher-analysis');
         showLoader(container);
-
         const { data: attempts, error } = await supabaseClient.from('attempts').select('score, questions(topics(name, subject))');
         if (error || attempts.length === 0) { container.innerHTML = `<p>No student attempt data available yet.</p>`; return; }
 
         const totalAttempts = attempts.length;
-        const totalCorrect = attempts.filter(a => a.score === 1).length;
+        const totalCorrect = attempts.filter(a => a.score > 0).length;
         const avgAccuracy = (totalCorrect / totalAttempts * 100);
         const { count: studentCount } = await supabaseClient.from('users').select('*', { count: 'exact', head: true });
         
@@ -1192,7 +1404,7 @@
             const topic = attempt.questions.topics.name;
             if (!acc[topic]) acc[topic] = { correct: 0, total: 0 };
             acc[topic].total++;
-            if (attempt.score === 1) acc[topic].correct++;
+            if (attempt.score > 0) acc[topic].correct++;
             return acc;
         }, {});
 
@@ -1352,12 +1564,295 @@
         }
     }
     
+    // --- CMS (TEACHER ONLY) --- //
+    async function loadCMSView() {
+        const container = document.getElementById('teacher-cms');
+        showLoader(container, 'list');
+        const topicsBySubject = await getTopics();
+        let html = `<div id="cms-topic-list">
+            <div class="section-header cms-header">
+                <div>
+                    <h2>Content Management</h2>
+                    <p>Select a topic to add, edit, or delete questions.</p>
+                </div>
+                <button class="btn btn-primary" style="width: auto;" id="add-topic-btn">Add New Topic</button>
+            </div>
+        `;
+        for (const subject in topicsBySubject) {
+            html += `<div class="subject-section"><h3>${subject}</h3><ul class="topic-list">`;
+            topicsBySubject[subject].forEach(topic => {
+                html += `<li class="topic-item"><span class="topic-name">${topic.name}</span><div><button class="btn-edit-questions" data-topic-id="${topic.id}" data-topic-name="${topic.name}">Manage Questions</button></div></li>`;
+            });
+            html += `</ul></div>`;
+        }
+        html += '</div><div id="cms-question-editor" class="hidden"></div>'
+        container.innerHTML = html;
+    }
+
+    async function loadQuestionEditor(topicId, topicName) {
+        document.getElementById('cms-topic-list').classList.add('hidden');
+        const editorContainer = document.getElementById('cms-question-editor');
+        editorContainer.classList.remove('hidden');
+        showLoader(editorContainer);
+        
+        const { data: questions, error } = await supabaseClient.from('questions').select('*').eq('topic_id', topicId).order('id');
+        if (error) { editorContainer.innerHTML = '<p>Could not load questions.</p>'; return; }
+
+        let html = `
+            <div class="section-header">
+                <button class="btn btn-secondary" style="width: auto; float: left; margin-right: 1rem;" id="back-to-cms-topics">← Back</button>
+                <h2>Editing: ${topicName}</h2>
+                <p>Manage the questions for this topic.</p>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <button class="btn btn-primary btn-add-question" style="width: auto;" data-topic-id="${topicId}">Add New Question</button>
+                <button class="btn btn-secondary btn-ai-generate" style="width: auto;" data-topic-id="${topicId}" data-topic-name="${topicName}">Generate with AI</button>
+            </div>
+            <ul class="question-list">
+        `;
+        questions.forEach(q => {
+            const questionText = q.question_text || q.question;
+            html += `
+                <li class="question-item" data-question-id="${q.id}">
+                    <p>${questionText.substring(0, 100)}${questionText.length > 100 ? '...' : ''}</p>
+                    <div class="question-item-actions">
+                        <button class="btn-edit-q" title="Edit Question">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+                        </button>
+                        <button class="btn-delete-q" title="Delete Question">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                        </button>
+                    </div>
+                </li>
+            `;
+        });
+        html += `</ul>`;
+        editorContainer.innerHTML = html;
+    }
+    
+    function openQuestionModal(questionData = null) {
+        const modal = document.getElementById('question-modal');
+        const form = document.getElementById('question-form');
+        form.reset();
+        if (questionData) {
+            document.getElementById('question-modal-title').textContent = 'Edit Question';
+            document.getElementById('question-id').value = questionData.id;
+            document.getElementById('question-topic-id').value = questionData.topic_id;
+            document.getElementById('question-form-text').value = questionData.question_text || questionData.question;
+            document.getElementById('question-form-option-a').value = questionData.option_a;
+            document.getElementById('question-form-option-b').value = questionData.option_b;
+            document.getElementById('question-form-option-c').value = questionData.option_c;
+            document.getElementById('question-form-option-d').value = questionData.option_d;
+            document.getElementById('question-form-correct').value = questionData.correct_answer;
+        } else {
+            document.getElementById('question-modal-title').textContent = 'Add New Question';
+        }
+        modal.classList.remove('hidden');
+    }
+
+    async function handleQuestionFormSubmit(e) {
+        e.preventDefault();
+        const questionId = document.getElementById('question-id').value;
+        const topicId = document.getElementById('question-topic-id').value;
+        const questionPayload = {
+            topic_id: topicId,
+            question_text: document.getElementById('question-form-text').value,
+            option_a: document.getElementById('question-form-option-a').value,
+            option_b: document.getElementById('question-form-option-b').value,
+            option_c: document.getElementById('question-form-option-c').value,
+            option_d: document.getElementById('question-form-option-d').value,
+            correct_answer: document.getElementById('question-form-correct').value,
+        };
+
+        let error;
+        if (questionId) {
+            ({ error } = await supabaseClient.from('questions').update(questionPayload).eq('id', questionId));
+        } else {
+            ({ error } = await supabaseClient.from('questions').insert(questionPayload));
+        }
+        
+        if (error) {
+            showFeedback('Error saving question.', 'error');
+            console.error(error);
+        } else {
+            showFeedback(`Question successfully ${questionId ? 'updated' : 'added'}!`, 'success');
+            document.getElementById('question-modal').classList.add('hidden');
+            const topicName = document.querySelector('#cms-question-editor .section-header h2').textContent.replace('Editing: ','');
+            loadQuestionEditor(topicId, topicName);
+        }
+    }
+
+    async function handleDeleteQuestion(questionId) {
+        const { error } = await supabaseClient.from('questions').delete().eq('id', questionId);
+        if (error) {
+            showFeedback('Could not delete question.', 'error');
+        } else {
+            showFeedback('Question deleted.', 'success');
+            const questionItem = document.querySelector(`.question-item[data-question-id="${questionId}"]`);
+            if (questionItem) questionItem.remove();
+        }
+    }
+
+    function openTopicModal() {
+        document.getElementById('topic-modal').classList.remove('hidden');
+        document.getElementById('topic-form').reset();
+    }
+
+    async function handleTopicFormSubmit(e) {
+        e.preventDefault();
+        const topicName = document.getElementById('topic-form-name').value;
+        const subject = document.getElementById('topic-form-subject').value;
+
+        if (!topicName || !subject) {
+            showFeedback('Please fill out all fields.', 'error');
+            return;
+        }
+
+        const { error } = await supabaseClient
+            .from('topics')
+            .insert({ name: topicName, subject: subject, active_status: true });
+
+        if (error) {
+            showFeedback('Could not create the new topic.', 'error');
+            console.error(error);
+        } else {
+            showFeedback('New topic created successfully!', 'success');
+            document.getElementById('topic-modal').classList.add('hidden');
+            loadCMSView();
+        }
+    }
+
+    // --- AI ASSISTANT --- //
+    function openAiAssistant(topicId, topicName) {
+        const modal = document.getElementById('ai-assistant-modal');
+        modal.dataset.topicId = topicId;
+        modal.dataset.topicName = topicName;
+        document.getElementById('ai-results-container').innerHTML = `<p>Click "Generate" to create new questions for the topic: <strong>${topicName}</strong>.</p>`;
+        modal.classList.remove('hidden');
+    }
+
+    async function handleAiGenerationFormSubmit(e) {
+        e.preventDefault();
+        const numQuestions = document.getElementById('ai-num-questions').value;
+        const topicName = document.getElementById('ai-assistant-modal').dataset.topicName;
+        const resultsContainer = document.getElementById('ai-results-container');
+        resultsContainer.innerHTML = '<div class="loader"></div><p>Generating questions... This may take a moment.</p>';
+
+        try {
+            // Step 1: Securely fetch the API key from your Supabase table.
+            const { data: apiKeyData, error: apiKeyError } = await supabaseClient
+                .from('api_keys')
+                .select('api_key')
+                .eq('service_name', 'GEMINI')
+                .single();
+
+            if (apiKeyError || !apiKeyData) {
+                throw new Error("Could not retrieve Gemini API key from the database. Please ensure it is stored correctly in the 'api_keys' table.");
+            }
+            const apiKey = apiKeyData.api_key;
+
+            // Step 2: Construct the prompt and payload for the Gemini API.
+            const userQuery = `Generate ${numQuestions} unique, high-quality multiple-choice questions for a Class 8 Social Science student on the topic "${topicName}". The questions should be factual and conceptual. Return the response as a valid JSON array of objects. Each object must have the following keys: "question_text", "option_a", "option_b", "option_c", "option_d", "correct_answer". The "correct_answer" key must have a value of "A", "B", "C", or "D".`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                "question_text": { "type": "STRING" },
+                                "option_a": { "type": "STRING" },
+                                "option_b": { "type": "STRING" },
+                                "option_c": { "type": "STRING" },
+                                "option_d": { "type": "STRING" },
+                                "correct_answer": { "type": "STRING" },
+                            }
+                        }
+                    }
+                },
+            };
+
+            // Step 3: Call the Gemini API.
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+            
+            const result = await response.json();
+            const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!jsonText) throw new Error("No content received from AI.");
+
+            const generatedQuestions = JSON.parse(jsonText);
+            renderAiGeneratedQuestions(generatedQuestions);
+
+        } catch (error) {
+            resultsContainer.innerHTML = `<p style="color: var(--error-color)">Error generating questions: ${error.message}</p>`;
+            console.error(error);
+        }
+    }
+
+    function renderAiGeneratedQuestions(questions) {
+        const resultsContainer = document.getElementById('ai-results-container');
+        if (!questions || questions.length === 0) {
+            resultsContainer.innerHTML = `<p>The AI could not generate questions for this topic. Please try again.</p>`;
+            return;
+        }
+        
+        let html = '';
+        questions.forEach((q, index) => {
+            const questionData = JSON.stringify(q).replace(/"/g, '&quot;');
+            html += `
+                <div class="ai-generated-question">
+                    <h4>${index + 1}. ${q.question_text}</h4>
+                    <ul>
+                        <li>A: ${q.option_a}</li>
+                        <li>B: ${q.option_b}</li>
+                        <li>C: ${q.option_c}</li>
+                        <li>D: ${q.option_d}</li>
+                    </ul>
+                    <p>Correct Answer: <span class="correct-answer">${q.correct_answer}</span></p>
+                    <button class="btn btn-secondary btn-add-ai-q" data-question='${questionData}'>Add to Topic</button>
+                </div>
+            `;
+        });
+        resultsContainer.innerHTML = html;
+    }
+
+    async function handleAddAiQuestion(button) {
+        const topicId = document.getElementById('ai-assistant-modal').dataset.topicId;
+        const questionData = JSON.parse(button.dataset.question);
+        
+        const payload = {
+            topic_id: topicId,
+            question_text: questionData.question_text,
+            option_a: questionData.option_a,
+            option_b: questionData.option_b,
+            option_c: questionData.option_c,
+            option_d: questionData.option_d,
+            correct_answer: questionData.correct_answer
+        };
+
+        const { error } = await supabaseClient.from('questions').insert(payload);
+        if (error) {
+            showFeedback('Error adding this question.', 'error');
+            console.error(error);
+        } else {
+            showFeedback('Question added!', 'success');
+            button.textContent = 'Added!';
+            button.disabled = true;
+        }
+    }
+
     // --- THEME --- //
     function applyTheme(theme) {
         const isDark = theme === 'dark';
         document.documentElement.classList.toggle('dark', isDark);
-        document.querySelector('#moon-icon-teacher').style.display = isDark ? 'none' : 'block';
-        document.querySelector('#sun-icon-teacher').style.display = isDark ? 'block' : 'none';
     }
 
     function toggleTheme() {
@@ -1374,31 +1869,65 @@
 
         document.getElementById('show-signup').addEventListener('click', () => { showPage('signup-page'); });
         document.getElementById('show-login').addEventListener('click', () => { showPage('login-page'); });
-        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
-        document.getElementById('theme-toggle-teacher').addEventListener('click', toggleTheme);
+        
+        document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', toggleTheme);
+        });
 
         document.getElementById('login-form').addEventListener('submit', handleLogin);
         document.getElementById('signup-form').addEventListener('submit', handleSignup);
+        document.getElementById('question-form').addEventListener('submit', handleQuestionFormSubmit);
+        document.getElementById('topic-form').addEventListener('submit', handleTopicFormSubmit);
+        document.getElementById('ai-generation-form').addEventListener('submit', handleAiGenerationFormSubmit);
         
         document.body.addEventListener('click', async (e) => {
+            // General
             if (e.target.classList.contains('btn-logout')) handleLogout();
             if (e.target.closest('.nav-btn')) {
                 const navBtn = e.target.closest('.nav-btn');
-                const pageSelector = navBtn.closest('.page').id === 'student-dashboard-page' ? '#student-dashboard-page' : '#teacher-dashboard-page';
+                const pageSelector = navBtn.closest('.page').id === 'student-dashboard-page' ? '#teacher-dashboard-page' : '#teacher-dashboard-page';
                 switchDashboardTab(navBtn, pageSelector);
             }
+            // Quiz
             if (e.target.classList.contains('btn-quiz')) startQuiz(e.target.dataset.topicId, e.target.dataset.topicName);
             if (e.target.id === 'close-quiz-btn' || e.target.id === 'finish-quiz-btn') { 
                 document.getElementById('quiz-modal').classList.add('hidden'); 
                 clearInterval(currentTimer);
-                quizState = {}; // THE FIX IS HERE: Reset state completely on close.
+                quizState = {};
             }
             if (e.target.classList.contains('option-btn') && !e.target.classList.contains('disabled')) selectOption(e.target);
             if (e.target.id === 'next-question-btn') nextQuestion();
+            // Discussions
             if (e.target.classList.contains('btn-discuss')) showDiscussionBoard(e.target.dataset.topicId, e.target.dataset.topicName);
             if (e.target.id === 'back-to-topics-btn') showStudentDashboard();
             if (e.target.closest('.thread-item')) showThreadView(e.target.closest('.thread-item').dataset.threadId);
             if (e.target.classList.contains('delete-btn') && confirm('Are you sure?')) deleteDiscussionPost(e.target.dataset.postId);
+            // CMS
+            if (e.target.classList.contains('btn-edit-questions')) loadQuestionEditor(e.target.dataset.topicId, e.target.dataset.topicName);
+            if (e.target.id === 'back-to-cms-topics') loadCMSView();
+            if (e.target.id === 'add-topic-btn') openTopicModal();
+            if (e.target.id === 'close-topic-modal-btn') document.getElementById('topic-modal').classList.add('hidden');
+            if (e.target.classList.contains('btn-add-question')) {
+                const topicId = e.target.dataset.topicId;
+                openQuestionModal();
+                document.getElementById('question-topic-id').value = topicId;
+            }
+            if(e.target.closest('.btn-edit-q')) {
+                const questionId = e.target.closest('.question-item').dataset.questionId;
+                const { data } = await supabaseClient.from('questions').select('*').eq('id', questionId).single();
+                if(data) openQuestionModal(data);
+            }
+             if(e.target.closest('.btn-delete-q')) {
+                const questionId = e.target.closest('.question-item').dataset.questionId;
+                if(confirm('Are you sure you want to delete this question forever?')) {
+                    handleDeleteQuestion(questionId);
+                }
+            }
+            if (e.target.id === 'close-question-modal-btn') document.getElementById('question-modal').classList.add('hidden');
+            // AI Assistant
+            if (e.target.classList.contains('btn-ai-generate')) openAiAssistant(e.target.dataset.topicId, e.target.dataset.topicName);
+            if (e.target.id === 'close-ai-modal-btn') document.getElementById('ai-assistant-modal').classList.add('hidden');
+            if (e.target.classList.contains('btn-add-ai-q')) handleAddAiQuestion(e.target);
         });
         
         document.body.addEventListener('change', async (e) => {
@@ -1422,6 +1951,8 @@
 
 </body>
 </html>
+
+
 
 
 
