@@ -393,6 +393,10 @@
             margin-left: 0.5rem;
         }
         .btn-quiz:hover, .btn-discuss:hover, .btn-edit-questions:hover { background-color: var(--primary-dark); }
+        .btn-revision-quiz {
+            width: auto;
+            margin-bottom: 1.5rem;
+        }
 
         .leaderboard-rank { font-weight: 700; min-width: 30px; }
         .leaderboard-name { flex-grow: 1; font-weight: 500; }
@@ -535,6 +539,27 @@
             border-radius: 6px; margin-bottom: 0.5rem; font-weight: 500;
         }
         .strong-topics h4 { color: #16a34a; } .weak-topics h4 { color: #dc2626; }
+        .ai-analysis-card {
+            margin-top: 2rem;
+            background-color: var(--nav-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .ai-analysis-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .ai-analysis-card p {
+            line-height: 1.6;
+            color: var(--muted-text-color);
+        }
+        .dark .ai-analysis-card p {
+            color: var(--text-color);
+        }
 
         /* --- Achievements/Badges --- */
         .badges-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1.5rem; }
@@ -657,6 +682,23 @@
         .ai-generated-question button {
             width: auto;
             padding: 0.5rem 1rem;
+        }
+
+        /* Quiz Explanation */
+        #explanation-container {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        #explain-answer-btn {
+            width: auto;
+            margin-bottom: 1rem;
+        }
+        .explanation-content {
+            background-color: var(--nav-hover-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            line-height: 1.6;
         }
 
         @media (max-width: 768px) {
@@ -849,6 +891,10 @@
             <div id="quiz-body" class="modal-body">
                 <p id="question-text">Question text will appear here.</p>
                 <div class="options-grid" id="options-container"></div>
+                 <div id="explanation-container" class="hidden">
+                    <button id="explain-answer-btn" class="btn btn-secondary" style="width:auto; margin-bottom: 1rem;">Explain Answer</button>
+                    <div id="explanation-content" class="explanation-content"></div>
+                </div>
             </div>
             <div id="quiz-footer" class="modal-footer">
                 <button id="close-quiz-btn" class="btn btn-secondary">Close</button>
@@ -1189,18 +1235,28 @@
     }
 
     // --- QUIZ LOGIC --- //
+    async function initializeQuiz(questions, quizTitle) {
+        document.getElementById('quiz-topic-name').textContent = quizTitle;
+        document.getElementById('quiz-modal').classList.remove('hidden');
+        document.getElementById('quiz-result').classList.add('hidden');
+        document.getElementById('quiz-body').classList.remove('hidden');
+        document.getElementById('quiz-footer').style.display = 'flex';
+        document.getElementById('quiz-progress-bar').style.width = '0%';
+
+        const shuffledQuestions = questions.sort(() => 0.5 - Math.random());
+        quizState = { questions: shuffledQuestions.slice(0, 30), currentQuestionIndex: 0, score: 0, attempts: [] };
+        
+        renderQuestion();
+        startTimer(15 * 60);
+        quizLoading = false;
+    }
+    
     async function startQuiz(topicId, topicName) {
         if (quizLoading) return;
         quizLoading = true;
         
         document.getElementById('question-text').textContent = 'Loading questions...';
         document.getElementById('options-container').innerHTML = '<div class="loader"></div>';
-        document.getElementById('quiz-topic-name').textContent = topicName;
-        document.getElementById('quiz-modal').classList.remove('hidden');
-        document.getElementById('quiz-result').classList.add('hidden');
-        document.getElementById('quiz-body').classList.remove('hidden');
-        document.getElementById('quiz-footer').style.display = 'flex';
-        document.getElementById('quiz-progress-bar').style.width = '0%';
 
         const { data, error } = await supabaseClient.from('questions').select('*').eq('topic_id', topicId);
         if (error || data.length === 0) {
@@ -1210,15 +1266,50 @@
             return;
         }
         
-        const shuffledQuestions = data.sort(() => 0.5 - Math.random());
-        quizState = { questions: shuffledQuestions.slice(0, 30), currentQuestionIndex: 0, score: 0, attempts: [] };
-        renderQuestion();
-        startTimer(15 * 60);
-        quizLoading = false;
+        initializeQuiz(data, topicName);
     }
     
+    async function startRevisionQuiz() {
+        if (quizLoading) return;
+        quizLoading = true;
+
+        showFeedback("Building your personalized revision quiz...", 'info');
+        
+        const { data: incorrectAttempts, error } = await supabaseClient
+            .from('attempts')
+            .select('questions(*)')
+            .eq('user_id', currentUser.id)
+            .eq('score', 0);
+        
+        if (error || !incorrectAttempts || incorrectAttempts.length < 1) {
+            showFeedback("You don't have any incorrect answers to revise yet!", 'info');
+            quizLoading = false;
+            return;
+        }
+
+        const incorrectQuestions = [];
+        const seenQuestionIds = new Set();
+        for(const attempt of incorrectAttempts) {
+            if (attempt.questions && !seenQuestionIds.has(attempt.questions.id)) {
+                incorrectQuestions.push(attempt.questions);
+                seenQuestionIds.add(attempt.questions.id);
+            }
+        }
+        
+        if (incorrectQuestions.length === 0) {
+             showFeedback("You don't have any incorrect answers to revise yet!", 'info');
+             quizLoading = false;
+             return;
+        }
+        
+        initializeQuiz(incorrectQuestions, "Personalized Revision Quiz");
+    }
+
     function renderQuestion() {
         if (!quizState.questions || quizState.currentQuestionIndex >= quizState.questions.length) { endQuiz(); return; }
+        document.getElementById('explanation-container').classList.add('hidden');
+        document.getElementById('explanation-content').innerHTML = '';
+        
         const question = quizState.questions[quizState.currentQuestionIndex];
         const progress = ((quizState.currentQuestionIndex) / quizState.questions.length) * 100;
         document.getElementById('quiz-progress-bar').style.width = `${progress}%`;
@@ -1230,6 +1321,7 @@
 
     function selectOption(selectedBtn) {
         const selectedOption = selectedBtn.dataset.option;
+        quizState.lastAnswered = selectedOption;
         const question = quizState.questions[quizState.currentQuestionIndex];
         const isCorrect = selectedOption === question.correct_answer;
         let score = 0;
@@ -1243,6 +1335,8 @@
         }
         quizState.attempts.push({ user_id: currentUser.id, question_id: question.id, selected_option: selectedOption, score: score });
         document.querySelectorAll('.option-btn').forEach(btn => btn.classList.add('disabled'));
+        document.getElementById('explanation-container').classList.remove('hidden');
+        document.getElementById('explain-answer-btn').disabled = false;
         document.getElementById('next-question-btn').classList.remove('hidden');
     }
 
@@ -1318,7 +1412,7 @@
     async function loadStudentAnalysis() {
         const container = document.getElementById('student-analysis');
         showLoader(container);
-        const { data: attempts, error } = await supabaseClient.from('attempts').select('score, questions(topics(name, subject))').eq('user_id', currentUser.id);
+        const { data: attempts, error } = await supabaseClient.from('attempts').select('score, questions(id, topics(name, subject))').eq('user_id', currentUser.id);
         if (error || !attempts) { container.innerHTML = `<p>Could not load your performance data.</p>`; return; }
         if (attempts.length === 0) { container.innerHTML = `<div class="section-header"><h2>My Analysis</h2><p>Complete some quizzes to see your performance analysis here.</p></div>`; return; }
 
@@ -1349,9 +1443,14 @@
         const strongTopics = topicAccuracies.filter(t => t.accuracy >= 75).slice(0, 5);
         const weakTopics = topicAccuracies.filter(t => t.accuracy < 50).sort((a, b) => a.accuracy - b.accuracy).slice(0, 5);
         
+        const revisionQuizButtonHtml = incorrectAnswers >= 30 
+            ? `<button class="btn btn-primary btn-revision-quiz">Create Revision Quiz</button>` 
+            : `<button class="btn btn-secondary btn-revision-quiz" disabled title="Answer at least 30 questions incorrectly to unlock.">Create Revision Quiz</button>`;
+
         container.innerHTML = `
             <div class="section-header"><h2>My Analysis</h2><p>An overview of your performance across all topics.</p></div>
-            <div class="stats-grid">
+            ${revisionQuizButtonHtml}
+            <div class="stats-grid" style="margin-top: 1.5rem;">
                 <div class="stat-card"><h4>Overall Accuracy</h4><div class="value" data-value="${overallAccuracy.toFixed(1)}">0%</div></div>
                 <div class="stat-card"><h4>Questions Answered</h4><div class="value" data-value="${totalQuestions}">0</div></div>
                 <div class="stat-card"><h4>Correct Answers</h4><div class="value" data-value="${correctAnswers}">0</div></div>
@@ -1361,6 +1460,10 @@
             <div class="topic-analysis-grid">
                 <div class="topic-analysis-list strong-topics"><h4>💪 Strong Topics</h4><ul>${strongTopics.map(t => `<li>${t.name}</li>`).join('') || '<li>Complete more quizzes!</li>'}</ul></div>
                 <div class="topic-analysis-list weak-topics"><h4>🧠 Topics to Revise</h4><ul>${weakTopics.map(t => `<li>${t.name}</li>`).join('') || '<li>Looking good!</li>'}</ul></div>
+            </div>
+            <div id="ai-student-analysis" class="ai-analysis-card">
+                <h3>✨ AI Tutor Insights</h3>
+                <div id="ai-student-analysis-content"><div class="loader"></div></div>
             </div>
         `;
         
@@ -1386,6 +1489,8 @@
             },
             options: { scales: { y: { beginAtZero: true, max: 100 } }, responsive: true, maintainAspectRatio: false }
         });
+
+        getAiStudentAnalysis({ overallAccuracy, strongTopics, weakTopics });
     }
 
     async function loadPlatformAnalysis() {
@@ -1419,6 +1524,10 @@
                 <div class="stat-card"><h4>Average Accuracy</h4><div class="value" data-value="${avgAccuracy.toFixed(1)}">0%</div></div>
             </div>
             <div class="topic-analysis-grid"><div class="topic-analysis-list weak-topics"><h4>Most Difficult Topics (Lowest Accuracy)</h4><ul>${mostDifficultTopics.map(t => `<li>${t.name} (${t.accuracy.toFixed(1)}%)</li>`).join('')}</ul></div></div>
+             <div id="ai-platform-analysis" class="ai-analysis-card">
+                <h3>✨ AI Analyst Summary</h3>
+                <div id="ai-platform-analysis-content"><div class="loader"></div></div>
+            </div>
         `;
         
         container.querySelectorAll('.stat-card .value').forEach(el => {
@@ -1427,6 +1536,8 @@
             animateValue(el, 0, endValue, 1500);
             if(isPercent) el.innerHTML = endValue.toFixed(1) + "%";
         });
+        
+        getAiPlatformAnalysis({ avgAccuracy, studentCount, mostDifficultTopics });
     }
 
     // --- ACHIEVEMENTS / BADGES --- //
@@ -1723,6 +1834,63 @@
     }
 
     // --- AI ASSISTANT --- //
+    async function getGeminiApiKey() {
+        const { data, error } = await supabaseClient
+            .from('api_keys')
+            .select('api_key')
+            .eq('service_name', 'GEMINI')
+            .single();
+        if (error || !data || !data.api_key || data.api_key.includes('PASTE_YOUR')) {
+            throw new Error("Gemini API key is not configured in the database 'api_keys' table.");
+        }
+        return data.api_key;
+    }
+
+    async function callGemini(userQuery, systemPrompt = null) {
+        const apiKey = await getGeminiApiKey();
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+        };
+        if (systemPrompt) {
+            payload.systemInstruction = { parts: [{ text: systemPrompt }] };
+        }
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+        const result = await response.json();
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!text) throw new Error("No content received from AI.");
+        return text;
+    }
+    
+    async function getAiStudentAnalysis(analysisData) {
+        const contentEl = document.getElementById('ai-student-analysis-content');
+        try {
+            const prompt = `Act as a friendly and encouraging AI Tutor. The student has the following performance data in Social Science: Overall Accuracy: ${analysisData.overallAccuracy.toFixed(1)}%. Strongest Topics: ${analysisData.strongTopics.map(t => t.name).join(', ') || 'None yet'}. Weakest Topics: ${analysisData.weakTopics.map(t => t.name).join(', ') || 'None yet'}. Based on this, provide a short (2-3 sentences), personalized paragraph of feedback and suggest one specific area they should focus on next.`;
+            const analysisText = await callGemini(prompt);
+            contentEl.innerHTML = `<p>${analysisText}</p>`;
+        } catch (error) {
+            contentEl.innerHTML = `<p>AI analysis could not be generated at this time.</p>`;
+            console.error("AI Student Analysis Error:", error);
+        }
+    }
+
+    async function getAiPlatformAnalysis(analysisData) {
+         const contentEl = document.getElementById('ai-platform-analysis-content');
+        try {
+            const prompt = `Act as an educational data analyst. The learning platform has the following aggregate data: Total Students: ${analysisData.studentCount}. Average Quiz Accuracy: ${analysisData.avgAccuracy.toFixed(1)}%. The 5 most difficult topics for students are: ${analysisData.mostDifficultTopics.map(t => `${t.name} (${t.accuracy.toFixed(1)}%)`).join(', ')}. Provide a short (2-3 sentences) summary of the platform's health and suggest a potential area for instructional focus.`;
+            const analysisText = await callGemini(prompt);
+            contentEl.innerHTML = `<p>${analysisText}</p>`;
+        } catch (error) {
+            contentEl.innerHTML = `<p>AI analysis could not be generated at this time.</p>`;
+            console.error("AI Platform Analysis Error:", error);
+        }
+    }
+
     function openAiAssistant(topicId, topicName) {
         const modal = document.getElementById('ai-assistant-modal');
         modal.dataset.topicId = topicId;
@@ -1739,19 +1907,7 @@
         resultsContainer.innerHTML = '<div class="loader"></div><p>Generating questions... This may take a moment.</p>';
 
         try {
-            // Step 1: Securely fetch the API key from your Supabase table.
-            const { data: apiKeyData, error: apiKeyError } = await supabaseClient
-                .from('api_keys')
-                .select('api_key')
-                .eq('service_name', 'GEMINI')
-                .single();
-
-            if (apiKeyError || !apiKeyData) {
-                throw new Error("Could not retrieve Gemini API key from the database. Please ensure it is stored correctly in the 'api_keys' table.");
-            }
-            const apiKey = apiKeyData.api_key;
-
-            // Step 2: Construct the prompt and payload for the Gemini API.
+            const apiKey = await getGeminiApiKey();
             const userQuery = `Generate ${numQuestions} unique, high-quality multiple-choice questions for a Class 8 Social Science student on the topic "${topicName}". The questions should be factual and conceptual. Return the response as a valid JSON array of objects. Each object must have the following keys: "question_text", "option_a", "option_b", "option_c", "option_d", "correct_answer". The "correct_answer" key must have a value of "A", "B", "C", or "D".`;
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             
@@ -1776,7 +1932,6 @@
                 },
             };
 
-            // Step 3: Call the Gemini API.
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1790,7 +1945,6 @@
 
             const generatedQuestions = JSON.parse(jsonText);
             renderAiGeneratedQuestions(generatedQuestions);
-
         } catch (error) {
             resultsContainer.innerHTML = `<p style="color: var(--error-color)">Error generating questions: ${error.message}</p>`;
             console.error(error);
@@ -1848,6 +2002,26 @@
             button.disabled = true;
         }
     }
+    
+    async function handleExplainAnswer() {
+        const btn = document.getElementById('explain-answer-btn');
+        btn.disabled = true;
+        const contentEl = document.getElementById('explanation-content');
+        contentEl.innerHTML = '<div class="loader"></div>';
+
+        const question = quizState.questions[quizState.currentQuestionIndex];
+        const userAnswer = quizState.lastAnswered;
+        
+        try {
+            const prompt = `Act as a helpful Social Science tutor for a Class 8 student. The student was asked: "${question.question_text || question.question}". The options were A) ${question.option_a}, B) ${question.option_b}, C) ${question.option_c}, D) ${question.option_d}. The correct answer is ${question.correct_answer}. The student chose ${userAnswer}. Please provide a simple explanation in one or two short paragraphs. First, explain why the correct answer is right. Then, if the student's answer was wrong, briefly explain why their choice was incorrect.`;
+            const explanationText = await callGemini(prompt);
+            contentEl.innerHTML = `<p>${explanationText}</p>`;
+        } catch (error) {
+            contentEl.innerHTML = `<p>Could not generate an explanation at this time.</p>`;
+            console.error("AI Explanation Error:", error);
+        }
+    }
+
 
     // --- THEME --- //
     function applyTheme(theme) {
@@ -1885,11 +2059,12 @@
             if (e.target.classList.contains('btn-logout')) handleLogout();
             if (e.target.closest('.nav-btn')) {
                 const navBtn = e.target.closest('.nav-btn');
-                const pageSelector = navBtn.closest('.page').id === 'student-dashboard-page' ? '#teacher-dashboard-page' : '#teacher-dashboard-page';
+                const pageSelector = `#${navBtn.closest('.page').id}`;
                 switchDashboardTab(navBtn, pageSelector);
             }
             // Quiz
             if (e.target.classList.contains('btn-quiz')) startQuiz(e.target.dataset.topicId, e.target.dataset.topicName);
+             if (e.target.classList.contains('btn-revision-quiz')) startRevisionQuiz();
             if (e.target.id === 'close-quiz-btn' || e.target.id === 'finish-quiz-btn') { 
                 document.getElementById('quiz-modal').classList.add('hidden'); 
                 clearInterval(currentTimer);
@@ -1897,6 +2072,7 @@
             }
             if (e.target.classList.contains('option-btn') && !e.target.classList.contains('disabled')) selectOption(e.target);
             if (e.target.id === 'next-question-btn') nextQuestion();
+            if (e.target.id === 'explain-answer-btn') handleExplainAnswer();
             // Discussions
             if (e.target.classList.contains('btn-discuss')) showDiscussionBoard(e.target.dataset.topicId, e.target.dataset.topicName);
             if (e.target.id === 'back-to-topics-btn') showStudentDashboard();
@@ -1951,11 +2127,6 @@
 
 </body>
 </html>
-
-
-
-
-
 
 
 
