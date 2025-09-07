@@ -3097,7 +3097,24 @@ async function handleExplainAnswer() {
         btn.textContent = 'Explain Answer';
         btn.disabled = false;
     }
-}// Intercept AI responses and format markdown
+}// Override the message display to support markdown formatting
+(function() {
+    const originalInnerHTML = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+    
+    Object.defineProperty(Element.prototype, 'innerHTML', {
+        set: function(value) {
+            if (this.classList && this.classList.contains('message-bubble') && this.classList.contains('model')) {
+                const formattedValue = value
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+                originalInnerHTML.set.call(this, formattedValue);
+            } else {
+                originalInnerHTML.set.call(this, value);
+            }
+        },
+        get: originalInnerHTML.get
+    });
+})()// Intercept AI responses and format markdown
 const originalCallGemini = callGemini;
 callGemini = async function(userQuery, systemPrompt = null) {
     const response = await originalCallGemini(userQuery, systemPrompt);
@@ -3105,6 +3122,7 @@ callGemini = async function(userQuery, systemPrompt = null) {
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 };
+        
 </script>
 
 </body>
