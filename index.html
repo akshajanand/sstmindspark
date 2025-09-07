@@ -356,8 +356,8 @@
             padding-bottom: 0.5rem;
         }
 
-        .topic-list, .leaderboard-list, .student-list { list-style: none; }
-        .topic-item, .leaderboard-item, .student-item {
+        .topic-list, .leaderboard-list, .student-list, .chat-history-list { list-style: none; }
+        .topic-item, .leaderboard-item, .student-item, .chat-history-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -368,7 +368,8 @@
             margin-bottom: 0.75rem;
             transition: all 0.2s;
         }
-        .topic-item:hover, .leaderboard-item:hover, .student-item:hover {
+        .student-item, .chat-history-item { cursor: pointer; }
+        .topic-item:hover, .leaderboard-item:hover, .student-item:hover, .chat-history-item:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,0.05);
             background-color: var(--nav-hover-bg);
@@ -701,6 +702,55 @@
             line-height: 1.6;
         }
 
+        /* AI Chat Styles */
+        .ai-chat-layout { display: flex; height: 100%; }
+        .chat-history-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 1rem;
+        }
+        .chat-history-list { list-style: none; overflow-y: auto; flex-grow: 1; }
+        .chat-history-item {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-history-item.active { background-color: var(--nav-active-bg); color: var(--primary-color); }
+
+        .chat-main { flex-grow: 1; display: flex; flex-direction: column; }
+        .chat-messages { flex-grow: 1; overflow-y: auto; padding: 1.5rem; }
+        .message-bubble {
+            max-width: 75%;
+            padding: 0.75rem 1.25rem;
+            border-radius: 18px;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        .message-bubble.user {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 4px;
+            margin-left: auto;
+        }
+        .message-bubble.model {
+            background-color: var(--nav-hover-bg);
+            border-bottom-left-radius: 4px;
+        }
+        .chat-input-form {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+        #chat-input { flex-grow: 1; margin: 0; }
+        #chat-submit-btn { width: auto; margin-left: 1rem; }
+
         @media (max-width: 1024px) {
             .dashboard-body { flex-direction: column; }
             .dashboard-sidebar {
@@ -787,6 +837,10 @@
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v11.494m-5.747-6.99H17.75" /></svg>
                             Topics
                         </button>
+                         <button class="nav-btn" data-tab="student-ai-assistant">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 002.25-2.25V6.75a2.25 2.25 0 00-2.25-2.25H6.75A2.25 2.25 0 004.5 6.75v10.5a2.25 2.25 0 002.25 2.25zm.75-12h9v9h-9v-9z" /></svg>
+                            AI Assistant
+                        </button>
                         <button class="nav-btn" data-tab="student-analysis">
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             My Analysis
@@ -802,6 +856,7 @@
                     </nav>
                     <main class="dashboard-content">
                         <div id="student-topics" class="content-section"></div>
+                        <div id="student-ai-assistant" class="content-section hidden" style="padding: 0; height: 100%;"></div>
                         <div id="student-analysis" class="content-section hidden"></div>
                         <div id="student-leaderboard" class="content-section hidden"></div>
                         <div id="student-badges" class="content-section hidden"></div>
@@ -833,6 +888,10 @@
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" /></svg>
                             Content Management
                         </button>
+                         <button class="nav-btn" data-tab="teacher-student-chats">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193l-3.72 3.72a1.125 1.125 0 01-1.59 0l-3.72-3.72A2.25 2.25 0 013.75 14.886V10.608c0-.97.616-1.813 1.5-2.097m14.25-1.125a2.25 2.25 0 00-2.25-2.25h-10.5a2.25 2.25 0 00-2.25 2.25v.458c.72-.121 1.453-.121 2.175 0V6.75h10.5v.458c.722.121 1.453.121 2.175 0V7.386z" /></svg>
+                            Student Chats
+                        </button>
                         <button class="nav-btn" data-tab="teacher-analysis">
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                             Platform Analytics
@@ -849,8 +908,12 @@
                     <main class="dashboard-content">
                         <div id="teacher-topics" class="content-section"></div>
                         <div id="teacher-cms" class="content-section hidden"></div>
+                        <div id="teacher-student-chats" class="content-section hidden" style="padding: 0; height: 100%;"></div>
                         <div id="teacher-analysis" class="content-section hidden"></div>
-                        <div id="teacher-students" class="content-section hidden"></div>
+                        <div id="teacher-students" class="content-section hidden">
+                             <div id="teacher-student-list-view"></div>
+                             <div id="teacher-student-detail-view" class="hidden"></div>
+                        </div>
                         <div id="teacher-leaderboard" class="content-section hidden"></div>
                     </main>
                 </div>
@@ -1034,6 +1097,7 @@
     const TEACHER_ACCOUNTS = { 'akshajanand': 'teacher@123', 'kuhusinha': 'teacher@123' };
     let currentUser = null, quizState = {}, currentTimer = null, myChart = null;
     let quizLoading = false;
+    let activeChatId = null;
 
     // --- UTILITY & PAGE NAVIGATION --- //
     function showFeedback(message, type = 'info', duration = 3000) {
@@ -1157,11 +1221,13 @@
         page.querySelector(`#${tabId}`).classList.remove('hidden');
         switch(tabId) {
             case 'student-topics': loadStudentTopics(); break;
+            case 'student-ai-assistant': loadAiAssistantView(); break;
             case 'student-analysis': loadStudentAnalysis(); break;
             case 'student-leaderboard': loadLeaderboard('#student-leaderboard'); break;
             case 'student-badges': loadStudentBadges(); break;
             case 'teacher-topics': loadTeacherTopics(); break;
             case 'teacher-cms': loadCMSView(); break;
+            case 'teacher-student-chats': loadTeacherStudentChatsView(); break;
             case 'teacher-analysis': loadPlatformAnalysis(); break;
             case 'teacher-students': loadAllStudents(); break;
             case 'teacher-leaderboard': loadLeaderboard('#teacher-leaderboard'); break;
@@ -1224,13 +1290,17 @@
     }
 
     async function loadAllStudents() {
-        const container = document.getElementById('teacher-students');
+        const container = document.getElementById('teacher-student-list-view');
+        const detailContainer = document.getElementById('teacher-student-detail-view');
+        container.classList.remove('hidden');
+        detailContainer.classList.add('hidden');
+        detailContainer.innerHTML = '';
         showLoader(container, 'list');
-        const { data, error } = await supabaseClient.from('student_performance').select('total_score, users(username)');
+        const { data, error } = await supabaseClient.from('student_performance').select('total_score, users(id, username)');
         if (error) { container.innerHTML = `<p>Could not load student list.</p>`; return; }
-        let html = `<div class="section-header"><h2>All Students</h2><p>An overview of every student's performance.</p></div><ul class="student-list">`;
+        let html = `<div class="section-header"><h2>All Students</h2><p>Click on a student to view their detailed performance.</p></div><ul class="student-list">`;
         data.forEach(entry => {
-            html += `<li class="student-item"><span class="student-name">${entry.users.username}</span><span class="student-score">${entry.total_score} pts</span></li>`;
+            html += `<li class="student-item" data-student-id="${entry.users.id}" data-student-name="${entry.users.username}"><span class="student-name">${entry.users.username}</span><span class="student-score">${entry.total_score} pts</span></li>`;
         });
         html += `</ul>`;
         container.innerHTML = html;
@@ -1246,7 +1316,13 @@
         document.getElementById('quiz-progress-bar').style.width = '0%';
 
         const shuffledQuestions = questions.sort(() => 0.5 - Math.random());
-        quizState = { questions: shuffledQuestions.slice(0, 30), currentQuestionIndex: 0, score: 0, attempts: [] };
+        quizState = {
+            id: Date.now(), // Unique ID for this quiz session
+            questions: shuffledQuestions.slice(0, 30),
+            currentQuestionIndex: 0,
+            score: 0,
+            attempts: []
+        };
         
         renderQuestion();
         startTimer(15 * 60);
@@ -1257,10 +1333,16 @@
         if (quizLoading) return;
         quizLoading = true;
         
+        const quizId = Date.now();
+        quizState.id = quizId;
+
         document.getElementById('question-text').textContent = 'Loading questions...';
         document.getElementById('options-container').innerHTML = '<div class="loader"></div>';
 
         const { data, error } = await supabaseClient.from('questions').select('*').eq('topic_id', topicId);
+        
+        if (quizState.id !== quizId) return; // A new quiz was started, abort this one.
+
         if (error || data.length === 0) {
             showFeedback('Could not load questions for this topic.', 'error');
             document.getElementById('quiz-modal').classList.add('hidden'); 
@@ -1274,6 +1356,8 @@
     async function startRevisionQuiz() {
         if (quizLoading) return;
         quizLoading = true;
+        const quizId = Date.now();
+        quizState.id = quizId;
 
         showFeedback("Building your personalized revision quiz...", 'info');
         
@@ -1283,6 +1367,8 @@
             .eq('user_id', currentUser.id)
             .eq('score', 0);
         
+        if (quizState.id !== quizId) return;
+
         if (error || !incorrectAttempts || incorrectAttempts.length < 1) {
             showFeedback("You don't have any incorrect answers to revise yet!", 'info');
             quizLoading = false;
@@ -1351,8 +1437,10 @@
         clearInterval(currentTimer);
         document.getElementById('quiz-progress-bar').style.width = `100%`;
         
-        const { error: attemptsError } = await supabaseClient.from('attempts').insert(quizState.attempts);
-        if (attemptsError) { showFeedback('Error saving quiz results.', 'error'); }
+        if(quizState.attempts.length > 0) {
+            const { error: attemptsError } = await supabaseClient.from('attempts').insert(quizState.attempts);
+            if (attemptsError) { showFeedback('Error saving quiz results.', 'error'); }
+        }
 
         const { data: performanceData, error: fetchError } = await supabaseClient
             .from('student_performance')
@@ -1411,12 +1499,21 @@
         window.requestAnimationFrame(step);
     }
 
-    async function loadStudentAnalysis() {
-        const container = document.getElementById('student-analysis');
+    async function loadStudentAnalysis(studentId = null, studentName = null) {
+        const isTeacherView = !!(studentId && studentName);
+        const targetUserId = isTeacherView ? studentId : currentUser.id;
+        const container = isTeacherView ? document.getElementById('teacher-student-detail-view') : document.getElementById('student-analysis');
+        
         showLoader(container);
-        const { data: attempts, error } = await supabaseClient.from('attempts').select('score, questions(id, topics(name, subject))').eq('user_id', currentUser.id);
-        if (error || !attempts) { container.innerHTML = `<p>Could not load your performance data.</p>`; return; }
-        if (attempts.length === 0) { container.innerHTML = `<div class="section-header"><h2>My Analysis</h2><p>Complete some quizzes to see your performance analysis here.</p></div>`; return; }
+        const { data: attempts, error } = await supabaseClient.from('attempts').select('score, questions(id, topics(name, subject))').eq('user_id', targetUserId);
+        if (error || !attempts) { container.innerHTML = `<p>Could not load performance data.</p>`; return; }
+        
+        const backButton = isTeacherView ? `<button class="btn btn-secondary" style="width:auto; margin-bottom:1rem;" id="back-to-students-list">← Back to All Students</button>` : '';
+
+        if (attempts.length === 0) {
+            container.innerHTML = `${backButton}<div class="section-header"><h2>${isTeacherView ? studentName + "'s" : 'My'} Analysis</h2><p>No quiz data available yet.</p></div>`;
+            return;
+        }
 
         const totalQuestions = attempts.length;
         const correctAnswers = attempts.filter(a => a.score > 0).length;
@@ -1445,26 +1542,27 @@
         const strongTopics = topicAccuracies.filter(t => t.accuracy >= 75).slice(0, 5);
         const weakTopics = topicAccuracies.filter(t => t.accuracy < 50).sort((a, b) => a.accuracy - b.accuracy).slice(0, 5);
         
-        const revisionQuizButtonHtml = incorrectAnswers >= 30 
+        const revisionQuizButtonHtml = !isTeacherView && (incorrectAnswers >= 30 
             ? `<button class="btn btn-primary btn-revision-quiz">Create Revision Quiz</button>` 
-            : `<button class="btn btn-secondary btn-revision-quiz" disabled title="Answer at least 30 questions incorrectly to unlock.">Create Revision Quiz</button>`;
+            : `<button class="btn btn-secondary btn-revision-quiz" disabled title="Answer at least 30 questions incorrectly to unlock.">Create Revision Quiz</button>`);
 
         container.innerHTML = `
-            <div class="section-header"><h2>My Analysis</h2><p>An overview of your performance across all topics.</p></div>
-            ${revisionQuizButtonHtml}
+            ${backButton}
+            <div class="section-header"><h2>${isTeacherView ? studentName + "'s" : 'My'} Analysis</h2><p>An overview of performance across all topics.</p></div>
+            ${isTeacherView ? '' : revisionQuizButtonHtml}
             <div class="stats-grid" style="margin-top: 1.5rem;">
                 <div class="stat-card"><h4>Overall Accuracy</h4><div class="value" data-value="${overallAccuracy.toFixed(1)}">0%</div></div>
                 <div class="stat-card"><h4>Questions Answered</h4><div class="value" data-value="${totalQuestions}">0</div></div>
                 <div class="stat-card"><h4>Correct Answers</h4><div class="value" data-value="${correctAnswers}">0</div></div>
                 <div class="stat-card"><h4>Incorrect Answers</h4><div class="value" data-value="${incorrectAnswers}">0</div></div>
             </div>
-            <div class="chart-container"><h3>Performance by Subject</h3><canvas id="subjectPerfChart"></canvas></div>
+            <div class="chart-container"><h3>Performance by Subject</h3><canvas id="${isTeacherView ? 'teacher-student-chart' : 'student-chart'}"></canvas></div>
             <div class="topic-analysis-grid">
                 <div class="topic-analysis-list strong-topics"><h4>💪 Strong Topics</h4><ul>${strongTopics.map(t => `<li>${t.name}</li>`).join('') || '<li>Complete more quizzes!</li>'}</ul></div>
                 <div class="topic-analysis-list weak-topics"><h4>🧠 Topics to Revise</h4><ul>${weakTopics.map(t => `<li>${t.name}</li>`).join('') || '<li>Looking good!</li>'}</ul></div>
             </div>
-            <div id="ai-student-analysis" class="ai-analysis-card">
-                <h3>✨ AI Tutor Insights</h3>
+            <div class="ai-analysis-card">
+                <h3>✨ ${isTeacherView ? 'AI Performance Summary' : 'AI Tutor Insights'}</h3>
                 <div id="ai-student-analysis-content"><div class="loader"></div></div>
             </div>
         `;
@@ -1476,7 +1574,7 @@
             if(isPercent) el.innerHTML = endValue.toFixed(1) + "%";
         });
         
-        const ctx = document.getElementById('subjectPerfChart').getContext('2d');
+        const ctx = document.getElementById(isTeacherView ? 'teacher-student-chart' : 'student-chart').getContext('2d');
         if(myChart) myChart.destroy();
         myChart = new Chart(ctx, {
             type: 'bar',
@@ -1492,7 +1590,7 @@
             options: { scales: { y: { beginAtZero: true, max: 100 } }, responsive: true, maintainAspectRatio: false }
         });
 
-        getAiStudentAnalysis({ overallAccuracy, strongTopics, weakTopics });
+        getAiStudentAnalysis({ overallAccuracy, strongTopics, weakTopics, isTeacherView, studentName });
     }
 
     async function loadPlatformAnalysis() {
@@ -1835,7 +1933,7 @@
         }
     }
 
-    // --- AI ASSISTANT --- //
+    // --- AI ASSISTANT (CHAT & GENERATION) --- //
     async function getGeminiApiKey() {
         const { data, error } = await supabaseClient
             .from('api_keys')
@@ -1872,7 +1970,12 @@
     async function getAiStudentAnalysis(analysisData) {
         const contentEl = document.getElementById('ai-student-analysis-content');
         try {
-            const prompt = `Act as a friendly and encouraging AI Tutor. The student has the following performance data in Social Science: Overall Accuracy: ${analysisData.overallAccuracy.toFixed(1)}%. Strongest Topics: ${analysisData.strongTopics.map(t => t.name).join(', ') || 'None yet'}. Weakest Topics: ${analysisData.weakTopics.map(t => t.name).join(', ') || 'None yet'}. Based on this, provide a short (2-3 sentences), personalized paragraph of feedback and suggest one specific area they should focus on next.`;
+            let prompt;
+            if(analysisData.isTeacherView) {
+                 prompt = `Act as an educational analyst. A teacher is viewing a student named ${analysisData.studentName}'s performance. The student has the following data: Overall Accuracy: ${analysisData.overallAccuracy.toFixed(1)}%. Strongest Topics: ${analysisData.strongTopics.map(t => t.name).join(', ') || 'None yet'}. Weakest Topics: ${analysisData.weakTopics.map(t => t.name).join(', ') || 'None yet'}. Based on this, provide a short (2-3 sentences) summary for the teacher, highlighting the student's main strengths and areas for improvement.`;
+            } else {
+                 prompt = `Act as a friendly and encouraging AI Tutor. The student has the following performance data in Social Science: Overall Accuracy: ${analysisData.overallAccuracy.toFixed(1)}%. Strongest Topics: ${analysisData.strongTopics.map(t => t.name).join(', ') || 'None yet'}. Weakest Topics: ${analysisData.weakTopics.map(t => t.name).join(', ') || 'None yet'}. Based on this, provide a short (2-3 sentences), personalized paragraph of feedback and suggest one specific area they should focus on next.`;
+            }
             const analysisText = await callGemini(prompt);
             contentEl.innerHTML = `<p>${analysisText}</p>`;
         } catch (error) {
@@ -2043,6 +2146,175 @@
         }
     }
 
+    async function loadAiAssistantView() {
+        const container = document.getElementById('student-ai-assistant');
+        container.innerHTML = `
+            <div class="ai-chat-layout">
+                <div class="chat-history-sidebar">
+                    <button class="btn btn-primary" id="new-chat-btn">New Chat</button>
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">History</h3>
+                    <ul class="chat-history-list" id="chat-history-list">
+                        <div class="loader"></div>
+                    </ul>
+                </div>
+                <div class="chat-main">
+                    <div class="chat-messages" id="chat-messages">
+                        <p style="text-align: center; color: var(--muted-text-color);">Select a conversation or start a new one.</p>
+                    </div>
+                    <form class="chat-input-form" id="chat-form">
+                        <input type="text" id="chat-input" placeholder="Ask your SST question..." class="form-control" autocomplete="off" required>
+                        <button type="submit" id="chat-submit-btn" class="btn btn-primary">Send</button>
+                    </form>
+                </div>
+            </div>
+        `;
+        loadChatHistory();
+
+        document.getElementById('new-chat-btn').addEventListener('click', () => {
+            activeChatId = null;
+            document.getElementById('chat-messages').innerHTML = `<p style="text-align: center; color: var(--muted-text-color);">Ask me anything about Social Science!</p>`;
+            document.querySelectorAll('.chat-history-item').forEach(item => item.classList.remove('active'));
+        });
+        
+        document.getElementById('chat-form').addEventListener('submit', handleChatMessageSubmit);
+    }
+    
+    async function loadChatHistory(userId = null) {
+        const listEl = document.getElementById('chat-history-list');
+        const targetUserId = userId || currentUser.id;
+        
+        const { data, error } = await supabaseClient.from('ai_chats').select('*').eq('user_id', targetUserId).order('created_at', { ascending: false });
+
+        if(error) {
+            console.error("Error fetching chat history", error);
+            listEl.innerHTML = `<p>Could not load history.</p>`;
+            return;
+        }
+
+        if(data.length === 0) {
+            listEl.innerHTML = `<p style="color: var(--muted-text-color); font-size: 0.875rem; text-align: center;">No chats yet.</p>`;
+            return;
+        }
+
+        listEl.innerHTML = data.map(chat => `<li class="chat-history-item" data-chat-id="${chat.id}">${chat.title}</li>`).join('');
+    }
+
+    async function loadChatMessages(chatId, container, isTeacherView = false) {
+        activeChatId = chatId;
+        
+        document.querySelectorAll('.chat-history-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.chatId === chatId);
+        });
+        
+        container.innerHTML = '<div class="loader"></div>';
+        
+        const { data, error } = await supabaseClient.from('ai_chat_messages').select('*').eq('chat_id', chatId).order('created_at');
+
+        if (error) {
+            container.innerHTML = `<p>Error loading messages.</p>`;
+            return;
+        }
+        
+        container.innerHTML = data.map(msg => `<div class="message-bubble ${msg.role}">${msg.content.replace(/\n/g, '<br>')}</div>`).join('');
+        container.scrollTop = container.scrollHeight;
+        
+        if (isTeacherView) {
+            document.getElementById('chat-input').disabled = true;
+            document.getElementById('chat-submit-btn').disabled = true;
+        } else {
+             document.getElementById('chat-input').disabled = false;
+            document.getElementById('chat-submit-btn').disabled = false;
+        }
+    }
+
+    async function handleChatMessageSubmit(e) {
+        e.preventDefault();
+        const input = document.getElementById('chat-input');
+        const userInput = input.value.trim();
+        if(!userInput) return;
+
+        const messagesContainer = document.getElementById('chat-messages');
+        messagesContainer.innerHTML += `<div class="message-bubble user">${userInput}</div>`;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        input.value = '';
+        
+        const systemPrompt = "You are a helpful and friendly AI Tutor for a Class 8 student in India studying Social Science (History, Civics, Geography). Your goal is to explain concepts clearly and simply. Keep your answers concise and easy to understand. If a question is outside the scope of SST, politely decline to answer.";
+
+        try {
+            if (!activeChatId) {
+                const title = userInput.substring(0, 30) + (userInput.length > 30 ? '...' : '');
+                const { data, error } = await supabaseClient.from('ai_chats').insert({ user_id: currentUser.id, title: title }).select().single();
+                if(error) throw error;
+                activeChatId = data.id;
+                await loadChatHistory();
+                 document.querySelector(`.chat-history-item[data-chat-id="${activeChatId}"]`).classList.add('active');
+            }
+
+            await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'user', content: userInput });
+            
+            const aiResponse = await callGemini(userInput, systemPrompt);
+
+            await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'model', content: aiResponse });
+
+            messagesContainer.innerHTML += `<div class="message-bubble model">${aiResponse.replace(/\n/g, '<br>')}</div>`;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        } catch (error) {
+            showFeedback('Error communicating with AI Assistant.', 'error');
+            console.error(error);
+        }
+    }
+
+    async function loadTeacherStudentChatsView() {
+        const container = document.getElementById('teacher-student-chats');
+        container.innerHTML = `<div class="ai-chat-layout" id="teacher-chat-view"></div>`;
+        const chatViewContainer = document.getElementById('teacher-chat-view');
+        showLoader(chatViewContainer);
+
+        const { data: students, error } = await supabaseClient.from('users').select('id, username');
+        if (error || !students) {
+            chatViewContainer.innerHTML = `<p>Could not load students.</p>`;
+            return;
+        }
+        
+        let selectOptions = students.map(s => `<option value="${s.id}">${s.username}</option>`).join('');
+        
+        chatViewContainer.innerHTML = `
+            <div class="chat-history-sidebar">
+                 <div class="form-group" style="margin:0;">
+                    <label for="student-chat-select">Select a Student</label>
+                    <select id="student-chat-select">
+                        <option value="">-- Select --</option>
+                        ${selectOptions}
+                    </select>
+                </div>
+                <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Chat History</h3>
+                <ul class="chat-history-list" id="chat-history-list">
+                    <p style="color: var(--muted-text-color); font-size: 0.875rem; text-align: center;">Select a student to view their chats.</p>
+                </ul>
+            </div>
+            <div class="chat-main">
+                <div class="chat-messages" id="chat-messages">
+                     <p style="text-align: center; color: var(--muted-text-color);">Select a student and then a conversation to view it.</p>
+                </div>
+                <form class="chat-input-form" id="chat-form">
+                    <input type="text" id="chat-input" placeholder="Viewing student chat..." disabled>
+                    <button type="submit" id="chat-submit-btn" class="btn btn-primary" disabled>Send</button>
+                </form>
+            </div>
+        `;
+        
+        document.getElementById('student-chat-select').addEventListener('change', async (e) => {
+            const studentId = e.target.value;
+            if(studentId) {
+                await loadChatHistory(studentId);
+                 document.getElementById('chat-messages').innerHTML = `<p style="text-align: center; color: var(--muted-text-color);">Select a conversation from the list.</p>`;
+            } else {
+                 document.getElementById('chat-history-list').innerHTML = `<p style="color: var(--muted-text-color); font-size: 0.875rem; text-align: center;">Select a student to view their chats.</p>`;
+                 document.getElementById('chat-messages').innerHTML = `<p style="text-align: center; color: var(--muted-text-color);">Select a student and then a conversation to view it.</p>`;
+            }
+        });
+    }
 
     // --- THEME --- //
     function applyTheme(theme) {
@@ -2099,7 +2371,7 @@
             if (e.target.classList.contains('btn-discuss')) showDiscussionBoard(e.target.dataset.topicId, e.target.dataset.topicName);
             if (e.target.id === 'back-to-topics-btn') showStudentDashboard();
             if (e.target.closest('.thread-item')) showThreadView(e.target.closest('.thread-item').dataset.threadId);
-            if (e.target.classList.contains('delete-btn') && confirm('Are you sure?')) deleteDiscussionPost(e.target.dataset.postId);
+            if (e.target.classList.contains('delete-btn')) deleteDiscussionPost(e.target.dataset.postId);
             // CMS
             if (e.target.classList.contains('btn-edit-questions')) loadQuestionEditor(e.target.dataset.topicId, e.target.dataset.topicName);
             if (e.target.id === 'back-to-cms-topics') loadCMSView();
@@ -2117,15 +2389,31 @@
             }
              if(e.target.closest('.btn-delete-q')) {
                 const questionId = e.target.closest('.question-item').dataset.questionId;
-                if(confirm('Are you sure you want to delete this question forever?')) {
-                    handleDeleteQuestion(questionId);
-                }
+                handleDeleteQuestion(questionId);
             }
             if (e.target.id === 'close-question-modal-btn') document.getElementById('question-modal').classList.add('hidden');
             // AI Assistant
             if (e.target.classList.contains('btn-ai-generate')) openAiAssistant(e.target.dataset.topicId, e.target.dataset.topicName);
             if (e.target.id === 'close-ai-modal-btn') document.getElementById('ai-assistant-modal').classList.add('hidden');
             if (e.target.classList.contains('btn-add-ai-q')) handleAddAiQuestion(e.target);
+            if(e.target.closest('.chat-history-item')) {
+                const chatId = e.target.closest('.chat-history-item').dataset.chatId;
+                const isTeacherView = !!document.getElementById('teacher-student-chats');
+                loadChatMessages(chatId, document.getElementById('chat-messages'), isTeacherView);
+            }
+            // Teacher view of student performance
+            if (e.target.closest('.student-item')) {
+                const studentItem = e.target.closest('.student-item');
+                const studentId = studentItem.dataset.studentId;
+                const studentName = studentItem.dataset.studentName;
+                document.getElementById('teacher-student-list-view').classList.add('hidden');
+                const detailView = document.getElementById('teacher-student-detail-view');
+                detailView.classList.remove('hidden');
+                loadStudentAnalysis(studentId, studentName);
+            }
+            if (e.target.id === 'back-to-students-list') {
+                loadAllStudents();
+            }
         });
         
         document.body.addEventListener('change', async (e) => {
@@ -2144,7 +2432,672 @@
         } else {
             showPage('login-page');
         }
+    })
+    // Add this code at the end of your JavaScript to enable AI context referencing
+// Replace the existing handleChatMessageSubmit function
+
+async function handleChatMessageSubmit(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const userInput = input.value.trim();
+    if(!userInput) return;
+
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.innerHTML += `<div class="message-bubble user">${userInput}</div>`;
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    input.value = '';
+    
+    const systemPrompt = "You are a helpful and friendly AI Tutor for a Class 8 student in India studying Social Science (History, Civics, Geography). Your goal is to explain concepts clearly and simply. Keep your answers concise and easy to understand. If a question is outside the scope of SST, politely decline to answer.";
+
+    try {
+        if (!activeChatId) {
+            const title = userInput.substring(0, 30) + (userInput.length > 30 ? '...' : '');
+            const { data, error } = await supabaseClient.from('ai_chats').insert({ user_id: currentUser.id, title: title }).select().single();
+            if(error) throw error;
+            activeChatId = data.id;
+            await loadChatHistory();
+             document.querySelector(`.chat-history-item[data-chat-id="${activeChatId}"]`).classList.add('active');
+        }
+
+        await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'user', content: userInput });
+        
+        // Fetch previous messages for context
+        const { data: previousMessages } = await supabaseClient
+            .from('ai_chat_messages')
+            .select('role, content')
+            .eq('chat_id', activeChatId)
+            .order('created_at', { ascending: false })
+            .limit(8);
+            
+        let contextualPrompt = userInput;
+        
+        if (previousMessages && previousMessages.length > 1) {
+            const contextMessages = previousMessages.reverse().slice(-6, -1);
+            let conversationContext = "Previous conversation:\n";
+            
+            contextMessages.forEach(msg => {
+                const speaker = msg.role === 'user' ? 'Student' : 'Tutor';
+                conversationContext += `${speaker}: ${msg.content}\n`;
+            });
+            
+            contextualPrompt = `${conversationContext}\nCurrent question: ${userInput}`;
+        }
+            
+        const aiResponse = await callGemini(contextualPrompt, systemPrompt);
+
+        await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'model', content: aiResponse });
+
+        messagesContainer.innerHTML += `<div class="message-bubble model">${aiResponse.replace(/\n/g, '<br>')}</div>`;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    } catch (error) {
+        showFeedback('Error communicating with AI Assistant.', 'error');
+        console.error(error);
+    }
+}// Fix for chat history selection
+document.addEventListener('click', function(e) {
+    const chatHistoryItem = e.target.closest('.chat-history-item');
+    if (chatHistoryItem && chatHistoryItem.dataset.chatId) {
+        const chatId = chatHistoryItem.dataset.chatId;
+        const messagesContainer = document.getElementById('chat-messages');
+        const isTeacherView = !!document.getElementById('teacher-student-chats').querySelector('.ai-chat-layout');
+        
+        if (messagesContainer) {
+            loadChatMessages(chatId, messagesContainer, isTeacherView);
+        }
+    }
+})
+// Replace the existing handleChatMessageSubmit function with this personalized version
+
+async function handleChatMessageSubmit(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const userInput = input.value.trim();
+    if(!userInput) return;
+
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.innerHTML += `<div class="message-bubble user">${userInput}</div>`;
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    input.value = '';
+    
+    // Get student's name for personalization
+    const studentName = currentUser.username;
+    
+    const systemPrompt = `You are a helpful and friendly AI Tutor for a Class 8 student in India studying Social Science (History, Civics, Geography). The student's name is ${studentName}. Always address them by their name in your responses to make it personal and engaging. Your goal is to explain concepts clearly and simply. Keep your answers concise and easy to understand. If a question is outside the scope of SST, politely decline to answer while still using their name.`;
+
+    try {
+        if (!activeChatId) {
+            const title = userInput.substring(0, 30) + (userInput.length > 30 ? '...' : '');
+            const { data, error } = await supabaseClient.from('ai_chats').insert({ user_id: currentUser.id, title: title }).select().single();
+            if(error) throw error;
+            activeChatId = data.id;
+            await loadChatHistory();
+            document.querySelector(`.chat-history-item[data-chat-id="${activeChatId}"]`).classList.add('active');
+        }
+
+        await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'user', content: userInput });
+        
+        // Fetch previous messages for context
+        const { data: previousMessages } = await supabaseClient
+            .from('ai_chat_messages')
+            .select('role, content')
+            .eq('chat_id', activeChatId)
+            .order('created_at', { ascending: false })
+            .limit(8);
+            
+        let contextualPrompt = userInput;
+        
+        if (previousMessages && previousMessages.length > 1) {
+            const contextMessages = previousMessages.reverse().slice(-6, -1);
+            let conversationContext = `Previous conversation with ${studentName}:\n`;
+            
+            contextMessages.forEach(msg => {
+                const speaker = msg.role === 'user' ? studentName : 'Tutor';
+                conversationContext += `${speaker}: ${msg.content}\n`;
+            });
+            
+            contextualPrompt = `${conversationContext}\n${studentName}'s current question: ${userInput}\n\nPlease respond to ${studentName} while considering our previous conversation.`;
+        } else {
+            contextualPrompt = `${studentName} asks: ${userInput}`;
+        }
+            
+        const aiResponse = await callGemini(contextualPrompt, systemPrompt);
+
+        await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'model', content: aiResponse });
+
+        messagesContainer.innerHTML += `<div class="message-bubble model">${aiResponse.replace(/\n/g, '<br>')}</div>`;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    } catch (error) {
+        showFeedback('Error communicating with AI Assistant.', 'error');
+        console.error(error);
+    }
+}// Replace the existing handleChatMessageSubmit function with this advanced learning version
+
+async function handleChatMessageSubmit(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const userInput = input.value.trim();
+    if(!userInput) return;
+
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.innerHTML += `<div class="message-bubble user">${userInput}</div>`;
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    input.value = '';
+    
+    const studentName = currentUser.username;
+
+    try {
+        if (!activeChatId) {
+            const title = userInput.substring(0, 30) + (userInput.length > 30 ? '...' : '');
+            const { data, error } = await supabaseClient.from('ai_chats').insert({ user_id: currentUser.id, title: title }).select().single();
+            if(error) throw error;
+            activeChatId = data.id;
+            await loadChatHistory();
+            document.querySelector(`.chat-history-item[data-chat-id="${activeChatId}"]`).classList.add('active');
+        }
+
+        await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'user', content: userInput });
+        
+        // Fetch ALL previous messages from ALL chats for this student to build comprehensive understanding
+        const { data: allStudentMessages } = await supabaseClient
+            .from('ai_chat_messages')
+            .select('role, content, created_at, ai_chats!inner(user_id)')
+            .eq('ai_chats.user_id', currentUser.id)
+            .order('created_at', { ascending: true });
+            
+        // Get student's quiz performance data for learning context
+        const { data: studentPerformance } = await supabaseClient
+            .from('attempts')
+            .select('score, questions(topics(name, subject))')
+            .eq('user_id', currentUser.id);
+            
+        // Build comprehensive student profile
+        let studentProfile = `Student Profile for ${studentName}:\n`;
+        
+        if (studentPerformance && studentPerformance.length > 0) {
+            const totalQuestions = studentPerformance.length;
+            const correctAnswers = studentPerformance.filter(a => a.score > 0).length;
+            const accuracy = ((correctAnswers / totalQuestions) * 100).toFixed(1);
+            
+            // Analyze subject-wise performance
+            const subjectPerf = studentPerformance.reduce((acc, attempt) => {
+                if (attempt.questions?.topics) {
+                    const subject = attempt.questions.topics.subject;
+                    if (!acc[subject]) acc[subject] = { correct: 0, total: 0 };
+                    acc[subject].total++;
+                    if (attempt.score > 0) acc[subject].correct++;
+                }
+                return acc;
+            }, {});
+            
+            studentProfile += `- Overall quiz accuracy: ${accuracy}%\n`;
+            studentProfile += `- Subjects studied: ${Object.keys(subjectPerf).join(', ')}\n`;
+            
+            Object.entries(subjectPerf).forEach(([subject, data]) => {
+                const subjectAccuracy = ((data.correct / data.total) * 100).toFixed(1);
+                studentProfile += `- ${subject} performance: ${subjectAccuracy}%\n`;
+            });
+        }
+        
+        // Build conversation history summary
+        let conversationSummary = '';
+        if (allStudentMessages && allStudentMessages.length > 0) {
+            const recentMessages = allStudentMessages.slice(-20); // Last 20 messages for immediate context
+            conversationSummary = `Recent conversation history with ${studentName}:\n`;
+            
+            recentMessages.forEach(msg => {
+                const speaker = msg.role === 'user' ? studentName : 'Tutor';
+                conversationSummary += `${speaker}: ${msg.content}\n`;
+            });
+            
+            // Analyze conversation patterns for learning insights
+            const userMessages = allStudentMessages.filter(m => m.role === 'user');
+            if (userMessages.length > 5) {
+                studentProfile += `- Has asked ${userMessages.length} questions in total\n`;
+                
+                // Find common topics/keywords in questions
+                const allQuestions = userMessages.map(m => m.content.toLowerCase()).join(' ');
+                const commonWords = ['history', 'geography', 'civics', 'government', 'constitution', 'independence', 'mughal', 'british'];
+                const interests = commonWords.filter(word => allQuestions.includes(word));
+                if (interests.length > 0) {
+                    studentProfile += `- Shows interest in: ${interests.join(', ')}\n`;
+                }
+            }
+        }
+        
+        // Create comprehensive system prompt with learning
+        const systemPrompt = `You are a helpful and friendly AI Tutor for ${studentName}, a Class 8 student in India studying Social Science. 
+
+${studentProfile}
+
+Based on this information about ${studentName}, personalize your teaching approach:
+- Address them by name frequently
+- Reference their previous questions when relevant
+- Acknowledge their strengths and gently help with weaker areas
+- Build on topics they've shown interest in
+- Adapt your explanation style based on their learning patterns
+- Be encouraging about their progress over time
+
+Keep responses conversational, engaging, and educational. If questions are outside SST scope, politely answer it while using their name but then redirect them to tell they have to do SST right now.`;
+
+        // Build contextual prompt
+        let contextualPrompt;
+        if (conversationSummary) {
+            contextualPrompt = `${conversationSummary}\n\n${studentName}'s current question: ${userInput}\n\nBased on our conversation history and ${studentName}'s learning profile, please provide a personalized response.`;
+        } else {
+            contextualPrompt = `${studentName} asks: ${userInput}`;
+        }
+            
+        const aiResponse = await callGemini(contextualPrompt, systemPrompt);
+
+        await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'model', content: aiResponse });
+
+        messagesContainer.innerHTML += `<div class="message-bubble model">${aiResponse.replace(/\n/g, '<br>')}</div>`;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    } catch (error) {
+        showFeedback('Error communicating with AI Assistant.', 'error');
+        console.error(error);
+    }
+}
+// Replace the existing handleChatMessageSubmit function with this curriculum-aware version
+
+async function handleChatMessageSubmit(e) {
+    e.preventDefault();
+    const input = document.getElementById('chat-input');
+    const userInput = input.value.trim();
+    if(!userInput) return;
+
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.innerHTML += `<div class="message-bubble user">${userInput}</div>`;
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    input.value = '';
+    
+    const studentName = currentUser.username;
+
+    try {
+        if (!activeChatId) {
+            const title = userInput.substring(0, 30) + (userInput.length > 30 ? '...' : '');
+            const { data, error } = await supabaseClient.from('ai_chats').insert({ user_id: currentUser.id, title: title }).select().single();
+            if(error) throw error;
+            activeChatId = data.id;
+            await loadChatHistory();
+            document.querySelector(`.chat-history-item[data-chat-id="${activeChatId}"]`).classList.add('active');
+        }
+
+        await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'user', content: userInput });
+        
+        // Fetch ALL platform data for comprehensive AI knowledge
+        const [allStudentMessages, studentPerformance, allTopics, sampleQuestions] = await Promise.all([
+            // Student's conversation history
+            supabaseClient
+                .from('ai_chat_messages')
+                .select('role, content, created_at, ai_chats!inner(user_id)')
+                .eq('ai_chats.user_id', currentUser.id)
+                .order('created_at', { ascending: true }),
+            
+            // Student's quiz performance
+            supabaseClient
+                .from('attempts')
+                .select('score, questions(topics(name, subject))')
+                .eq('user_id', currentUser.id),
+                
+            // All topics available on platform
+            supabaseClient
+                .from('topics')
+                .select('*')
+                .order('subject', { ascending: true }),
+                
+            // Sample questions from each topic for context
+            supabaseClient
+                .from('questions')
+                .select('question_text, topics(name, subject)')
+                .limit(50)
+        ]);
+        
+        // Build comprehensive platform curriculum knowledge
+        let curriculumContext = `Platform Curriculum Overview:\n`;
+        
+        if (allTopics.data && allTopics.data.length > 0) {
+            const topicsBySubject = allTopics.data.reduce((acc, topic) => {
+                if (!acc[topic.subject]) acc[topic.subject] = [];
+                acc[topic.subject].push(topic.name);
+                return acc;
+            }, {});
+            
+            Object.entries(topicsBySubject).forEach(([subject, topics]) => {
+                curriculumContext += `\n${subject} Topics:\n`;
+                topics.forEach(topic => {
+                    const isActive = allTopics.data.find(t => t.name === topic)?.active_status;
+                    curriculumContext += `- ${topic} ${isActive ? '(Active)' : '(Inactive)'}\n`;
+                });
+            });
+        }
+        
+        // Add sample questions context
+        if (sampleQuestions.data && sampleQuestions.data.length > 0) {
+            curriculumContext += `\nSample Questions Available:\n`;
+            const questionsByTopic = sampleQuestions.data.reduce((acc, q) => {
+                if (q.topics) {
+                    const topicName = q.topics.name;
+                    if (!acc[topicName]) acc[topicName] = [];
+                    acc[topicName].push(q.question_text || q.question);
+                }
+                return acc;
+            }, {});
+            
+            Object.entries(questionsByTopic).forEach(([topic, questions]) => {
+                curriculumContext += `${topic}: ${questions.slice(0, 2).join('; ')}\n`;
+            });
+        }
+        
+        // Build student profile
+        let studentProfile = `Student Profile for ${studentName}:\n`;
+        
+        if (studentPerformance.data && studentPerformance.data.length > 0) {
+            const totalQuestions = studentPerformance.data.length;
+            const correctAnswers = studentPerformance.data.filter(a => a.score > 0).length;
+            const accuracy = ((correctAnswers / totalQuestions) * 100).toFixed(1);
+            
+            const subjectPerf = studentPerformance.data.reduce((acc, attempt) => {
+                if (attempt.questions?.topics) {
+                    const subject = attempt.questions.topics.subject;
+                    if (!acc[subject]) acc[subject] = { correct: 0, total: 0 };
+                    acc[subject].total++;
+                    if (attempt.score > 0) acc[subject].correct++;
+                }
+                return acc;
+            }, {});
+            
+            studentProfile += `- Overall quiz accuracy: ${accuracy}%\n`;
+            studentProfile += `- Total questions attempted: ${totalQuestions}\n`;
+            
+            Object.entries(subjectPerf).forEach(([subject, data]) => {
+                const subjectAccuracy = ((data.correct / data.total) * 100).toFixed(1);
+                studentProfile += `- ${subject} performance: ${subjectAccuracy}% (${data.correct}/${data.total})\n`;
+            });
+            
+            // Find topics they've studied vs available topics
+            const studiedTopics = studentPerformance.data
+                .filter(a => a.questions?.topics)
+                .map(a => a.questions.topics.name);
+            const uniqueStudiedTopics = [...new Set(studiedTopics)];
+            const allAvailableTopics = allTopics.data ? allTopics.data.map(t => t.name) : [];
+            const unstudiedTopics = allAvailableTopics.filter(t => !uniqueStudiedTopics.includes(t));
+            
+            studentProfile += `- Topics studied: ${uniqueStudiedTopics.join(', ')}\n`;
+            if (unstudiedTopics.length > 0) {
+                studentProfile += `- Topics not yet attempted: ${unstudiedTopics.slice(0, 5).join(', ')}${unstudiedTopics.length > 5 ? '...' : ''}\n`;
+            }
+        }
+        
+        // Build conversation history
+        let conversationSummary = '';
+        if (allStudentMessages.data && allStudentMessages.data.length > 0) {
+            const recentMessages = allStudentMessages.data.slice(-20);
+            conversationSummary = `Recent conversation history with ${studentName}:\n`;
+            
+            recentMessages.forEach(msg => {
+                const speaker = msg.role === 'user' ? studentName : 'Tutor';
+                conversationSummary += `${speaker}: ${msg.content}\n`;
+            });
+            
+            const userMessages = allStudentMessages.data.filter(m => m.role === 'user');
+            if (userMessages.length > 5) {
+                studentProfile += `- Total questions asked in chat: ${userMessages.length}\n`;
+            }
+        }
+        
+        // Create comprehensive system prompt
+        const systemPrompt = `You are ${studentName}'s personal AI Tutor for Class 8 Social Science in India. You have complete knowledge of the learning platform and curriculum.
+
+${curriculumContext}
+
+${studentProfile}
+
+Teaching Instructions:
+- Address ${studentName} by name and reference their learning journey
+- Connect questions to specific topics available on the platform
+- Suggest related topics they might find interesting based on platform curriculum  
+- Reference their quiz performance when relevant
+- Recommend topics they haven't studied yet when appropriate
+- Use examples from questions available on the platform
+- If they ask about topics not on the platform, explain what IS available instead
+- Build on their conversation history and learning patterns
+- Be encouraging about their progress and suggest next steps
+-If they ask something else from SST answer it politeley to and personalized to ${studentName}'s learning profile but then redirect them to SST
+-Use emojis in your answers
+-If a child asks who made you say Akshaj Created me with brilliance
+
+Keep responses educational, engaging, and personalized to ${studentName}'s learning profile.`;
+
+        // Build contextual prompt
+        let contextualPrompt;
+        if (conversationSummary) {
+            contextualPrompt = `${conversationSummary}\n\n${studentName}'s current question: ${userInput}\n\nBased on our platform curriculum, conversation history, and ${studentName}'s learning profile, provide a comprehensive and personalized response.`;
+        } else {
+            contextualPrompt = `${studentName} asks: ${userInput}`;
+        }
+            
+        const aiResponse = await callGemini(contextualPrompt, systemPrompt);
+
+        await supabaseClient.from('ai_chat_messages').insert({ chat_id: activeChatId, role: 'model', content: aiResponse });
+
+        messagesContainer.innerHTML += `<div class="message-bubble model">${aiResponse.replace(/\n/g, '<br>')}</div>`;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    } catch (error) {
+        showFeedback('Error communicating with AI Assistant.', 'error');
+        console.error(error);
+    }
+}// Add this code at the end of your JavaScript to fix the double question count issue--------------------------------------------------------------------------------------------------------------------------------------
+
+// Override initializeQuiz to ensure attempts array is properly reset
+async function initializeQuiz(questions, quizTitle) {
+    document.getElementById('quiz-topic-name').textContent = quizTitle;
+    document.getElementById('quiz-modal').classList.remove('hidden');
+    document.getElementById('quiz-result').classList.add('hidden');
+    document.getElementById('quiz-body').classList.remove('hidden');
+    document.getElementById('quiz-footer').style.display = 'flex';
+    document.getElementById('quiz-progress-bar').style.width = '0%';
+
+    const shuffledQuestions = questions.sort(() => 0.5 - Math.random());
+    quizState = {
+        id: Date.now(),
+        questions: shuffledQuestions.slice(0, 30),
+        currentQuestionIndex: 0,
+        score: 0,
+        attempts: [], // Ensure attempts array is always reset
+        lastAnswered: null
+    };
+    
+    renderQuestion();
+    startTimer(15 * 60);
+    quizLoading = false;
+}
+
+// Override selectOption to prevent double submissions
+function selectOption(selectedBtn) {
+    // Prevent double clicks and multiple submissions
+    if (selectedBtn.classList.contains('disabled') || document.querySelectorAll('.option-btn.disabled').length > 0) {
+        return;
+    }
+    
+    const selectedOption = selectedBtn.dataset.option;
+    quizState.lastAnswered = selectedOption;
+    const question = quizState.questions[quizState.currentQuestionIndex];
+    const isCorrect = selectedOption === question.correct_answer;
+    let score = 0;
+    
+    if (isCorrect) { 
+        quizState.score += 2; // 1 point per correct answer
+        score = 2; 
+        selectedBtn.classList.add('correct'); 
+    } else { 
+        selectedBtn.classList.add('incorrect'); 
+        document.querySelector(`.option-btn[data-option="${question.correct_answer}"]`)?.classList.add('correct'); 
+    }
+    
+    // Add to attempts array - this should only happen once per question
+    quizState.attempts.push({ 
+        user_id: currentUser.id, 
+        question_id: question.id, 
+        selected_option: selectedOption, 
+        score: score 
     });
+    
+    // Disable all buttons to prevent multiple clicks
+    document.querySelectorAll('.option-btn').forEach(btn => btn.classList.add('disabled'));
+    document.getElementById('explanation-container').classList.remove('hidden');
+    document.getElementById('explain-answer-btn').disabled = false;
+    document.getElementById('next-question-btn').classList.remove('hidden');
+}
+
+// Override endQuiz to ensure attempts are only inserted once
+async function endQuiz() {
+    clearInterval(currentTimer);
+    document.getElementById('quiz-progress-bar').style.width = `100%`;
+    
+    // Check if we have attempts and haven't already saved them
+    if(quizState.attempts && quizState.attempts.length > 0 && !quizState.attemptsSaved) {
+        const { error: attemptsError } = await supabaseClient.from('attempts').insert(quizState.attempts);
+        if (attemptsError) { 
+            showFeedback('Error saving quiz results.', 'error');
+            console.error('Attempts save error:', attemptsError);
+        } else {
+            quizState.attemptsSaved = true; // Mark as saved to prevent double saving
+        }
+    }
+
+    const { data: performanceData, error: fetchError } = await supabaseClient
+        .from('student_performance')
+        .select('total_score')
+        .eq('user_id', currentUser.id)
+        .single();
+
+    if (fetchError) {
+        showFeedback('Error fetching current score.', 'error');
+    } else {
+        const newTotalScore = performanceData.total_score + quizState.score;
+        const { error: updateError } = await supabaseClient
+            .from('student_performance')
+            .update({ total_score: newTotalScore })
+            .eq('user_id', currentUser.id);
+
+        if (updateError) {
+            showFeedback('Error updating total score.', 'error');
+        } else {
+            await checkAndAwardBadges();
+            await updateStudentPointsDisplay();
+        }
+    }
+
+    document.getElementById('quiz-body').classList.add('hidden');
+    document.getElementById('quiz-footer').style.display = 'none';
+    const resultContainer = document.getElementById('quiz-result');
+    resultContainer.classList.remove('hidden');
+    resultContainer.innerHTML = `<h2>Quiz Complete!</h2><p>You scored ${quizState.score} out of ${quizState.questions.length} points</p><button id="finish-quiz-btn" class="btn btn-primary">Finish</button>`;
+}
+
+// Clear quiz state when closing modal to prevent carryover
+document.getElementById('close-quiz-btn').addEventListener('click', function() {
+    quizState = {};
+    clearInterval(currentTimer);
+    quizLoading = false;
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'finish-quiz-btn') {
+        quizState = {}; // Clear state completely
+        clearInterval(currentTimer);
+        quizLoading = false;
+    }
+})// Override endQuiz to give quiz score + 20 completion bonus
+async function endQuiz() {
+    clearInterval(currentTimer);
+    document.getElementById('quiz-progress-bar').style.width = `100%`;
+    
+    // Check if we have attempts and haven't already saved them
+    if(quizState.attempts && quizState.attempts.length > 0 && !quizState.attemptsSaved) {
+        const { error: attemptsError } = await supabaseClient.from('attempts').insert(quizState.attempts);
+        if (attemptsError) { 
+            showFeedback('Error saving quiz results.', 'error');
+            console.error('Attempts save error:', attemptsError);
+        } else {
+            quizState.attemptsSaved = true; // Mark as saved to prevent double saving
+        }
+    }
+
+    const { data: performanceData, error: fetchError } = await supabaseClient
+        .from('student_performance')
+        .select('total_score')
+        .eq('user_id', currentUser.id)
+        .single();
+
+    if (fetchError) {
+        showFeedback('Error fetching current score.', 'error');
+    } else {
+        const completionBonus = 20; // 20 points for completing any quiz
+        const totalEarned = quizState.score + completionBonus; // Quiz score + completion bonus
+        const newTotalScore = performanceData.total_score + totalEarned;
+        
+        const { error: updateError } = await supabaseClient
+            .from('student_performance')
+            .update({ total_score: newTotalScore })
+            .eq('user_id', currentUser.id);
+
+        if (updateError) {
+            showFeedback('Error updating total score.', 'error');
+        } else {
+            await checkAndAwardBadges();
+            await updateStudentPointsDisplay();
+        }
+    }
+
+    document.getElementById('quiz-body').classList.add('hidden');
+    document.getElementById('quiz-footer').style.display = 'none';
+    const resultContainer = document.getElementById('quiz-result');
+    resultContainer.classList.remove('hidden');
+    
+    // Show breakdown of points earned
+    const completionBonus = 20;
+    const totalEarned = quizState.score + completionBonus;
+    resultContainer.innerHTML = `
+        <h2>Quiz Complete!</h2>
+        <p>You scored ${quizState.score} out of ${quizState.questions.length * 2} points</p>
+        <p style="color: var(--secondary-color); font-weight: 600;">+ ${completionBonus} bonus points for completing the quiz!</p>
+        <p style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);">Total Points Earned: ${totalEarned}</p>
+        <button id="finish-quiz-btn" class="btn btn-primary">Finish</button>
+    `;
+}// Override handleExplainAnswer to show loader when explaining answers
+async function handleExplainAnswer() {
+    const btn = document.getElementById('explain-answer-btn');
+    const contentEl = document.getElementById('explanation-content');
+    
+    // Disable button and show loading state
+    btn.disabled = true;
+    btn.textContent = 'Loading...';
+    contentEl.innerHTML = '<div class="loader"></div>';
+
+    const question = quizState.questions[quizState.currentQuestionIndex];
+    const userAnswer = quizState.lastAnswered;
+    
+    try {
+        const prompt = `Act as a helpful Social Science tutor for a Class 8 student. The student was asked: "${question.question_text || question.question}". The options were A) ${question.option_a}, B) ${question.option_b}, C) ${question.option_c}, D) ${question.option_d}. The correct answer is ${question.correct_answer}. The student chose ${userAnswer}. Please provide a simple explanation in one or two short paragraphs. First, explain why the correct answer is right. Then, if the student's answer was wrong, briefly explain why their choice was incorrect.`;
+        
+        const explanationText = await callGemini(prompt);
+        contentEl.innerHTML = `<p>${explanationText}</p>`;
+        
+    } catch (error) {
+        contentEl.innerHTML = `<p>Could not generate an explanation at this time.</p>`;
+        console.error("AI Explanation Error:", error);
+    } finally {
+        // Reset button state
+        btn.textContent = 'Explain Answer';
+        btn.disabled = false;
+    }
+};
 </script>
 
 </body>
