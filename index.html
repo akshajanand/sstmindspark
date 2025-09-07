@@ -701,23 +701,21 @@
             line-height: 1.6;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .dashboard-body { flex-direction: column; }
-            .dashboard-nav {
-                width: 100%; border-right: none; border-bottom: 1px solid var(--border-color);
-                display: flex; padding: 0; overflow-x: auto;
+            .dashboard-sidebar {
+                width: 100%; border-right: none; border-bottom: 2px solid var(--border-color);
+                padding: 1rem; flex-direction: row; align-items: center;
             }
-            .dashboard-nav .nav-btn {
-                flex: 1 0 auto; justify-content: center; padding: 1rem;
-                border-left: none; border-bottom: 3px solid transparent;
-            }
-             .dashboard-nav .nav-btn.active {
-                border-left: none; border-bottom-color: var(--primary-color);
-                background-color: transparent;
-            }
-            .topic-analysis-grid { grid-template-columns: 1fr; }
-            .dashboard-header h1 { font-size: 1.25rem; }
-            .auth-card { padding: 2rem; }
+            .sidebar-header { margin-bottom: 0; flex-grow: 1; }
+            .sidebar-nav { display: flex; gap: 0.5rem; flex-grow: 0;}
+            .sidebar-nav .nav-btn span { display: none; } /* Hide text on small screens */
+            .sidebar-footer { flex-direction: row; }
+            .grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .grid-cols-3 { grid-template-columns: 1fr; }
+            .dashboard-header { flex-direction: column; align-items: flex-start; gap: 1rem;}
         }
     </style>
 </head>
@@ -988,12 +986,16 @@
                 <h2>AI Question Generator</h2>
             </div>
             <div class="modal-body">
-                <form id="ai-generation-form" style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem;">
-                    <div class="form-group" style="flex-grow:1; margin:0;">
-                        <label for="ai-num-questions">Number of questions to generate:</label>
+                <form id="ai-generation-form" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; margin-bottom: 1.5rem;">
+                    <div class="form-group" style="flex: 1 1 150px; margin:0;">
+                        <label for="ai-num-questions">Number of questions:</label>
                         <input type="number" id="ai-num-questions" value="5" min="1" max="10">
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: auto; align-self: end;">Generate</button>
+                    <div class="form-group" style="flex: 2 1 300px; margin:0;">
+                        <label for="ai-extra-prompt">Additional Instructions (Optional)</label>
+                        <input type="text" id="ai-extra-prompt" placeholder="e.g., 'Focus on dates'">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: auto; flex: 1 1 auto;">Generate</button>
                 </form>
                 <div id="ai-results-container">
                     <p>Click "Generate" to create new questions for this topic.</p>
@@ -1905,10 +1907,14 @@
         const topicName = document.getElementById('ai-assistant-modal').dataset.topicName;
         const resultsContainer = document.getElementById('ai-results-container');
         resultsContainer.innerHTML = '<div class="loader"></div><p>Generating questions... This may take a moment.</p>';
+        const extraPrompt = document.getElementById('ai-extra-prompt').value.trim();
 
         try {
             const apiKey = await getGeminiApiKey();
-            const userQuery = `Generate ${numQuestions} unique, high-quality multiple-choice questions for a Class 8 Social Science student on the topic "${topicName}". The questions should be factual and conceptual. Return the response as a valid JSON array of objects. Each object must have the following keys: "question_text", "option_a", "option_b", "option_c", "option_d", "correct_answer". The "correct_answer" key must have a value of "A", "B", "C", or "D".`;
+            let userQuery = `Generate ${numQuestions} unique, high-quality multiple-choice questions for a Class 8 Social Science student on the topic "${topicName}". The questions should be factual and conceptual. Return the response as a valid JSON array of objects. Each object must have the following keys: "question_text", "option_a", "option_b", "option_c", "option_d", "correct_answer". The "correct_answer" key must have a value of "A", "B", "C", or "D".`;
+            if (extraPrompt) {
+                userQuery += ` \n\nAdditional instructions: ${extraPrompt}`;
+            }
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
             
             const payload = {
@@ -1963,7 +1969,7 @@
             const questionData = JSON.stringify(q).replace(/"/g, '&quot;');
             html += `
                 <div class="ai-generated-question">
-                    <h4>${index + 1}. ${q.question_text}</h4>
+                    <h4>${index + 1}. ${q.question_text || q.question}</h4>
                     <ul>
                         <li>A: ${q.option_a}</li>
                         <li>B: ${q.option_b}</li>
@@ -1982,20 +1988,35 @@
         const topicId = document.getElementById('ai-assistant-modal').dataset.topicId;
         const questionData = JSON.parse(button.dataset.question);
         
+        const questionText = questionData.question_text || questionData.question;
+        const optionA = questionData.option_a;
+        const optionB = questionData.option_b;
+        const optionC = questionData.option_c;
+        const optionD = questionData.option_d;
+        const correctAnswer = questionData.correct_answer;
+
+        if (!questionText || !optionA || !optionB || !optionC || !optionD || !correctAnswer) {
+            showFeedback('AI returned an incomplete question. Cannot add.', 'error');
+            button.textContent = 'Invalid Data';
+            button.disabled = true;
+            console.error("Invalid AI question data received:", questionData);
+            return;
+        }
+
         const payload = {
             topic_id: topicId,
-            question_text: questionData.question_text,
-            option_a: questionData.option_a,
-            option_b: questionData.option_b,
-            option_c: questionData.option_c,
-            option_d: questionData.option_d,
-            correct_answer: questionData.correct_answer
+            question_text: questionText,
+            option_a: optionA,
+            option_b: optionB,
+            option_c: optionC,
+            option_d: optionD,
+            correct_answer: correctAnswer
         };
 
         const { error } = await supabaseClient.from('questions').insert(payload);
         if (error) {
-            showFeedback('Error adding this question.', 'error');
-            console.error(error);
+            showFeedback('Error adding this question to the database.', 'error');
+            console.error("Supabase insert error:", error, "Payload:", payload);
         } else {
             showFeedback('Question added!', 'success');
             button.textContent = 'Added!';
@@ -2064,11 +2085,12 @@
             }
             // Quiz
             if (e.target.classList.contains('btn-quiz')) startQuiz(e.target.dataset.topicId, e.target.dataset.topicName);
-             if (e.target.classList.contains('btn-revision-quiz')) startRevisionQuiz();
+            if (e.target.classList.contains('btn-revision-quiz')) startRevisionQuiz();
             if (e.target.id === 'close-quiz-btn' || e.target.id === 'finish-quiz-btn') { 
                 document.getElementById('quiz-modal').classList.add('hidden'); 
                 clearInterval(currentTimer);
                 quizState = {};
+                quizLoading = false;
             }
             if (e.target.classList.contains('option-btn') && !e.target.classList.contains('disabled')) selectOption(e.target);
             if (e.target.id === 'next-question-btn') nextQuestion();
@@ -2127,6 +2149,4 @@
 
 </body>
 </html>
-
-
 
