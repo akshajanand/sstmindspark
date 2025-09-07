@@ -3097,6 +3097,13 @@ async function handleExplainAnswer() {
         btn.textContent = 'Explain Answer';
         btn.disabled = false;
     }
+}// Intercept AI responses and format markdown
+const originalCallGemini = callGemini;
+callGemini = async function(userQuery, systemPrompt = null) {
+    const response = await originalCallGemini(userQuery, systemPrompt);
+    return response
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
 };
 </script>
 
