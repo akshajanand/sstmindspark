@@ -3123,7 +3123,308 @@ callGemini = async function(userQuery, systemPrompt = null) {
     return response
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
-};
+
+}
+// Complete code for AI question generation and 2-attempt limit
+// Create this table first in Supabase:
+// CREATE TABLE student_topic_attempts (
+//     id SERIAL PRIMARY KEY,
+//     user_id INTEGER REFERENCES users(id),
+//     topic_id INTEGER REFERENCES topics(id),
+//     attempt_count INTEGER DEFAULT 0,
+//     created_at TIMESTAMP DEFAULT NOW(),
+//     UNIQUE(user_id, topic_id)
+// );
+
+// Track topic attempts and limit points
+async function checkTopicAttempts(topicId, userId) {
+    try {
+        const { data: attempts, error } = await supabaseClient
+            .from('student_topic_attempts')
+            .select('attempt_count')
+            .eq('user_id', userId)
+            .eq('topic_id', topicId)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            return { shouldAwardPoints: true, attemptCount: 1 };
+        }
+
+        if (!attempts) {
+            await supabaseClient
+                .from('student_topic_attempts')
+                .insert({ user_id: userId, topic_id: topicId, attempt_count: 1 });
+            return { shouldAwardPoints: true, attemptCount: 1 };
+        } else {
+            const newCount = attempts.attempt_count + 1;
+            await supabaseClient
+                .from('student_topic_attempts')
+                .update({ attempt_count: newCount })
+                .eq('user_id', userId)
+                .eq('topic_id', topicId);
+
+            return { 
+                shouldAwardPoints: newCount <= 2, 
+                attemptCount: newCount 
+            };
+        }
+    } catch (error) {
+        return { shouldAwardPoints: true, attemptCount: 1 };
+    }
+}
+
+// Override startQuiz to store topic ID
+async function startQuiz(topicId, topicName) {
+    if (quizLoading) return;
+    quizLoading = true;
+    
+    const quizId = Date.now();
+    quizState.id = quizId;
+    quizState.topicId = topicId;
+
+    document.getElementById('question-text').textContent = 'Loading questions...';
+    document.getElementById('options-container').innerHTML = '<div class="loader"></div>';
+
+    const { data, error } = await supabaseClient.from('questions').select('*').eq('topic_id', topicId);
+    
+    if (quizState.id !== quizId) return;
+
+    if (error || data.length === 0) {
+        showFeedback('Could not load questions for this topic.', 'error');
+        document.getElementById('quiz-modal').classList.add('hidden'); 
+        quizLoading = false;
+        return;
+    }
+    
+    initializeQuiz(data, topicName);
+}
+
+// Override endQuiz with attempt limit
+async function endQuiz() {
+    clearInterval(currentTimer);
+    document.getElementById('quiz-progress-bar').style.width = `100%`;
+    
+    if(quizState.attempts && quizState.attempts.length > 0 && !quizState.attemptsSaved) {
+        const { error: attemptsError } = await supabaseClient.from('attempts').insert(quizState.attempts);
+        if (attemptsError) { 
+            showFeedback('Error saving quiz results.', 'error');
+        } else {
+            quizState.attemptsSaved = true;
+        }
+    }
+
+    const { data: performanceData, error: fetchError } = await supabaseClient
+        .from('student_performance')
+        .select('total_score')
+        .eq('user_id', currentUser.id)
+        .single();
+
+    if (fetchError) {
+        showFeedback('Error fetching current score.', 'error');
+        return;
+    }
+
+    const topicId = quizState.topicId;
+    const { shouldAwardPoints, attemptCount } = await checkTopicAttempts(topicId, currentUser.id);
+    
+    if (shouldAwardPoints) {
+        const completionBonus = 20;
+        const pointsAwarded = quizState.score + completionBonus;
+        const newTotalScore = performanceData.total_score + pointsAwarded;
+        
+        const { error: updateError } = await supabaseClient
+            .from('student_performance')
+            .update({ total_score: newTotalScore })
+            .eq('user_id', currentUser.id);
+
+        if (!updateError) {
+            await checkAndAwardBadges();
+            await updateStudentPointsDisplay();
+        }
+    }
+
+    document.getElementById('quiz-body').classList.add('hidden');
+    document.getElementById('quiz-footer').style.display = 'none';
+    const resultContainer = document.getElementById('quiz-result');
+    resultContainer.classList.remove('hidden');
+    
+    let resultHTML;
+    if (shouldAwardPoints) {
+        const completionBonus = 20;
+        const totalEarned = quizState.score + completionBonus;
+        resultHTML = `
+            <h2>Quiz Complete!</h2>
+            <p>You scored ${quizState.score} out of ${quizState.questions.length * 2} points</p>
+            <p style="color: var(--secondary-color); font-weight: 600;">+ ${completionBonus} bonus points for completing the quiz!</p>
+            <p style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color);">Total Points Earned: ${totalEarned}</p>
+            <p style="color: var(--muted-text-color); font-size: 0.875rem;">Attempt ${attemptCount}/2 for this topic</p>
+            <button id="finish-quiz-btn" class="btn btn-primary">Finish</button>
+        `;
+    } else {
+        resultHTML = `
+            <h2>Quiz Complete!</h2>
+            <p>You scored ${quizState.score} out of ${quizState.questions.length * 2} points</p>
+            <p style="color: var(--warning-color); font-weight: 600;">No points awarded - This is attempt ${attemptCount} for this topic</p>
+            <p style="color: var(--muted-text-color);">Points are only awarded for the first 2 attempts per topic.</p>
+            <button id="finish-quiz-btn" class="btn btn-primary">Finish</button>
+        `;
+    }
+    
+    resultContainer.innerHTML = resultHTML;
+}
+
+// Fixed AI question generation
+async function handleAiGenerationFormSubmit(e) {
+    e.preventDefault();
+    const numQuestions = document.getElementById('ai-num-questions').value;
+    const topicName = document.getElementById('ai-assistant-modal').dataset.topicName;
+    const resultsContainer = document.getElementById('ai-results-container');
+    resultsContainer.innerHTML = '<div class="loader"></div><p>Generating questions... Please wait.</p>';
+    const extraPrompt = document.getElementById('ai-extra-prompt').value.trim();
+
+    try {
+        const apiKey = await getGeminiApiKey();
+        let userQuery = `Generate exactly ${numQuestions} multiple-choice questions for Class 8 Social Science on "${topicName}".
+
+Return ONLY valid JSON array:
+[
+    {
+        "question_text": "Question here?",
+        "option_a": "Option A",
+        "option_b": "Option B", 
+        "option_c": "Option C",
+        "option_d": "Option D",
+        "correct_answer": "A"
+    }
+]
+
+Requirements:
+- Age-appropriate for Class 8 students
+- correct_answer must be exactly "A", "B", "C", or "D"
+- No explanations, just the JSON array`;
+
+        if (extraPrompt) {
+            userQuery += `\n\nExtra: ${extraPrompt}`;
+        }
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: userQuery }] }],
+                generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+            })
+        });
+
+        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        
+        const result = await response.json();
+        let jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (!jsonText) throw new Error("No response from AI");
+
+        jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        
+        const jsonStart = jsonText.indexOf('[');
+        const jsonEnd = jsonText.lastIndexOf(']') + 1;
+        
+        if (jsonStart === -1 || jsonEnd === 0) {
+            throw new Error("Invalid JSON format");
+        }
+        
+        const cleanJson = jsonText.substring(jsonStart, jsonEnd);
+        const generatedQuestions = JSON.parse(cleanJson);
+        
+        if (!Array.isArray(generatedQuestions) || generatedQuestions.length === 0) {
+            throw new Error("No valid questions generated");
+        }
+
+        const validQuestions = generatedQuestions.filter(q => 
+            q.question_text && q.option_a && q.option_b && q.option_c && q.option_d && 
+            ['A', 'B', 'C', 'D'].includes(q.correct_answer)
+        );
+
+        if (validQuestions.length === 0) {
+            throw new Error("Generated questions are invalid");
+        }
+
+        renderAiGeneratedQuestions(validQuestions);
+        
+    } catch (error) {
+        console.error('AI Error:', error);
+        resultsContainer.innerHTML = `
+            <p style="color: var(--error-color);">Failed to generate questions. Please try again.</p>
+            <button class="btn btn-secondary" onclick="handleAiGenerationFormSubmit(event)" style="width: auto; margin-top: 1rem;">Retry</button>
+        `;
+    }
+}
+
+// Fixed renderAiGeneratedQuestions
+function renderAiGeneratedQuestions(questions) {
+    const resultsContainer = document.getElementById('ai-results-container');
+    if (!questions || questions.length === 0) {
+        resultsContainer.innerHTML = `<p>No questions generated. Please try again.</p>`;
+        return;
+    }
+    
+    let html = '';
+    questions.forEach((q, index) => {
+        const questionData = JSON.stringify(q).replace(/"/g, '&quot;');
+        html += `
+            <div class="ai-generated-question">
+                <h4>${index + 1}. ${q.question_text}</h4>
+                <ul>
+                    <li>A: ${q.option_a}</li>
+                    <li>B: ${q.option_b}</li>
+                    <li>C: ${q.option_c}</li>
+                    <li>D: ${q.option_d}</li>
+                </ul>
+                <p>Correct Answer: <span class="correct-answer">${q.correct_answer}</span></p>
+                <button class="btn btn-secondary btn-add-ai-q" data-question='${questionData}'>Add to Topic</button>
+            </div>
+        `;
+    });
+    resultsContainer.innerHTML = html;
+}
+
+// Fixed handleAddAiQuestion
+async function handleAddAiQuestion(button) {
+    const topicId = document.getElementById('ai-assistant-modal').dataset.topicId;
+    const questionData = JSON.parse(button.dataset.question);
+    
+    if (!questionData.question_text || !questionData.option_a || !questionData.correct_answer) {
+        showFeedback('Invalid question data', 'error');
+        return;
+    }
+
+    const payload = {
+        topic_id: topicId,
+        question_text: questionData.question_text,
+        option_a: questionData.option_a,
+        option_b: questionData.option_b,
+        option_c: questionData.option_c,
+        option_d: questionData.option_d,
+        correct_answer: questionData.correct_answer
+    };
+
+    const { error } = await supabaseClient.from('questions').insert(payload);
+    
+    if (error) {
+        showFeedback('Error adding question', 'error');
+    } else {
+        showFeedback('Question added successfully!', 'success');
+        button.textContent = 'Added!';
+        button.disabled = true;
+        button.style.backgroundColor = 'var(--secondary-color)';
+    }
+}
+
+// Event listener for AI question buttons
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('btn-add-ai-q')) {
+        handleAddAiQuestion(e.target);
+    }
+});
         
 </script>
 
